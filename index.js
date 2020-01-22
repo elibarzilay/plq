@@ -68,7 +68,7 @@ const sendToLogger = (x, ok = null, fail = null) => {
     console.log("--> %o", reply);
     const isOK = req.status == 200 && (isImage || req.responseText == "OK");
     changeSend(msg, reply, isOK && "ok");
-    if (isOK) ok && ok(); else fail && fail();
+    if (isOK) setSelectedButtons(txt), ok && ok(); else fail && fail();
   };
   const [user, pswd] = getLogin();
   req.open("GET", `/plq?${
@@ -76,28 +76,35 @@ const sendToLogger = (x, ok = null, fail = null) => {
   req.send();
 };
 
-let buttons = [];
-const setButtonsHTML = bs => {
-  buttons = bs.split("\n").filter(s => s);
-  $("buttons").innerHTML = buttons.map(b =>
-    `<button class="btn" id="${b}" accesskey="${b}">${b}</button>`).join("");
-  buttons.forEach(key => {
-    const node = $(key);
-    evListener(node, "click", () => sendToLogger(node));
-  });
-};
+let buttons = [], buttonLines = "";
 const setButtons = (bs = "") => {
-  const b = $("buttons");
-  if (bs == [...b.querySelectorAll("button")].map(b => b.innerText).join("\n"))
-    return;
-  b.style.height = `${b.scrollHeight}px`;
+  bs = bs.split("\n").map(s => s.trim()).filter(s => s.length);
+  const bLines = bs.join("\n");
+  if (bLines == buttonLines) return;
+  buttonLines = bLines, buttons = bs;
+  const div = $("buttons");
+  const createElts = () => {
+    while (div.firstChild) div.firstChild.remove();
+    buttons.forEach(txt => {
+      const b = document.createElement("button");
+      b.classList.add("btn");
+      b.innerText = txt;
+      evListener(b, "click", () => sendToLogger(b));
+      div.appendChild(b);
+    });
+  };
+  div.style.height = `${div.scrollHeight}px`;
   Promise.resolve()
-    .then(sleep(50)) .then(()=> b.style.height = `0`)
-    .then(sleep(500)).then(()=> setButtonsHTML(bs))
-    .then(sleep(50)) .then(()=> b.style.height = `${b.scrollHeight}px`)
-    .then(sleep(500)).then(()=> b.style.height = ``);
+    .then(sleep(50)) .then(()=> div.style.height = `0`)
+    .then(sleep(500)).then(()=> createElts())
+    .then(sleep(50)) .then(()=> div.style.height = `${div.scrollHeight}px`)
+    .then(sleep(500)).then(()=> div.style.height = ``);
 };
 setButtons();
+
+const setSelectedButtons = txt =>
+  [...$("buttons").querySelectorAll(".btn")].forEach(b =>
+    b.classList[b.innerText == txt ? "add" : "remove"]("selected"));
 
 const theTextSend = clear => {
   sendToLogger($("thetext").value.trim(),

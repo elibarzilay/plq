@@ -72,7 +72,8 @@ html > body {
   outline: none;
 }
 .inp { width: calc(100% - 3ex); }
-.btn { text-align: center; font-size: 150%; }
+.btn { text-align: center; font-size: 150%; border: 2px outset #fff; }
+.btn.selected { border-color: #fa0; box-shadow: 4px 4px 20px #850; }
 @media only screen and (min-width: 768px) {
   .inp, .btn, #thetext-submit { font-size: 200%; }
   #thetext-submit { vertical-align: unset !important; }
