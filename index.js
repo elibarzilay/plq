@@ -1,6 +1,5 @@
 "use strict";
 
-const defaultButtons = "12345".split("").join("\n");
 const passwordTest = "(password)";
 
 const $ = x => typeof x === "string" ? document.getElementById(x) : x;
@@ -80,7 +79,6 @@ const sendToLogger = (x, ok = null, fail = null) => {
 let buttons = [];
 const setButtonsHTML = bs => {
   buttons = bs.split("\n").filter(s => s);
-  if (!buttons.length) buttons = defaultButtons.split("\n");
   $("buttons").innerHTML = buttons.map(b =>
     `<button class="btn" id="${b}" accesskey="${b}">${b}</button>`).join("");
   buttons.forEach(key => {
@@ -88,9 +86,7 @@ const setButtonsHTML = bs => {
     evListener(node, "click", () => sendToLogger(node));
   });
 };
-const setButtons = bs => {
-  if (!bs) bs = defaultButtons;
-  console.log(`setting buttons: ${bs.replace(/\n/g, ", ")}`);
+const setButtons = (bs = "") => {
   const b = $("buttons");
   if (bs == [...b.querySelectorAll("button")].map(b => b.innerText).join("\n"))
     return;
@@ -101,7 +97,7 @@ const setButtons = bs => {
     .then(sleep(50)) .then(()=> b.style.height = `${b.scrollHeight}px`)
     .then(sleep(500)).then(()=> b.style.height = ``);
 };
-setButtons(defaultButtons);
+setButtons();
 
 const theTextSend = clear => {
   sendToLogger($("thetext").value.trim(),
@@ -209,7 +205,7 @@ const toggleEditor = () => {
   if (!editorOn && getUser() != "eli") return;
   editorOn = !editorOn;
   const editorInitText =
-    "???\n\n" + defaultButtons.split("\n").map(b => `${b}. \n`).join("");
+    "???\n\n" + [1,2,3,4,5].map(n => `${n}. \n`).join("");
   document.body.classList[editorOn ? "add" : "remove"]("sudo");
   t.outerHTML = t.outerHTML.replace(/^(<)[a-z]+|[a-z]+(>)$/g,
                                     editorOn ? "$1textarea$2" : "$1input$2");
