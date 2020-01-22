@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>PL: Q</title>
+  <meta name="description" content="PL Class Questions.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#235">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon256.png" />
+  <link rel="shortcut icon" href="icon256.png" />
+  <link rel="apple-touch-icon" href="icon256.png" />
+  <link rel="stylesheet" type="text/css" href="index.css" />
+  <script src="md5.min.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="navigation">
+  <div id="menu-handle"><button tabindex="-1">&#9776;</button></div>
+  <div id="nav-links">
+    <a href="#" id="show-login" tabindex="-1">Login</a>
+    <a href="#" id="install" tabindex="-1">Install</a>
+  </div>
+</div>
+<main>
+  <div id="timer">0</div>
+  <div id="text-container" class="container">
+    <div id="buttons"></div>
+    <div style="white-space: nowrap;">
+      <input type="text" id="thetext" class="inp"
+             placeholder="Text" aria-label="Test"
+             autocomplete="off" autocorrect="off" autocapitalize="off"
+             spellcheck="false"
+      /><button id="thetext-submit" tabindex="-1">&#x25B8;</button>
+    </div>
+  </div>
+  <div id="login-container" class="container" style="display: none;"><div>
+      <input type="text" id="user" class="inp"
+             placeholder="Username" aria-label="Username"
+             autocomplete="username" />
+    </div><div>
+      <input type="password" id="pswd" class="inp"
+             placeholder="Password" aria-label="Password"
+             autocomplete="current-password" />
+    </div>
+  </div>
+  <div><div id="log"></div><div class="fadeout"></div></div>
+</main>
+<script src="index.js" type="text/javascript"></script>
+</body>
+</html>

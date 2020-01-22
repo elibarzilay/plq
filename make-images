@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for s in 128 192 256 512; do
+  convert -geometry $sx$s -background transparent icon.svg icon$s.png
+done

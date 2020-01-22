@@ -1,0 +1,13 @@
+{
+  "short_name": "PLQ",
+  "name": "PL Q",
+  "icons": [{ "src": "icon128.png", "type": "image/png", "sizes": "128x128" },
+            { "src": "icon192.png", "type": "image/png", "sizes": "192x192" },
+            { "src": "icon256.png", "type": "image/png", "sizes": "256x256" },
+            { "src": "icon512.png", "type": "image/png", "sizes": "512x512" },
+            { "src": "icon.svg",    "type": "image/svg", "sizes": "any" }],
+  "start_url": "./",
+  "background_color": "#234",
+  "theme_color": "#235",
+  "display": "standalone"
+}
