@@ -211,8 +211,7 @@ const toggleEditor = () => {
   let t = $("thetext"), focus = document.activeElement == t, txt = t.value;
   if (!editorOn && getUser() != "eli") return;
   editorOn = !editorOn;
-  const editorInitText =
-    "???\n\n" + [1,2,3,4,5].map(n => `${n}. \n`).join("");
+  const editorInitText = "???\n\n* \n* \n* \n* \n* ";
   document.body.classList[editorOn ? "add" : "remove"]("sudo");
   t.outerHTML = t.outerHTML.replace(/^(<)[a-z]+|[a-z]+(>)$/g,
                                     editorOn ? "$1textarea$2" : "$1input$2");
