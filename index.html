@@ -24,15 +24,17 @@
   <div id="timer">0</div>
   <div id="text-container" class="container">
     <div id="buttons"></div>
-    <div style="white-space: nowrap;">
-      <input type="text" id="thetext" class="inp"
-             placeholder="Text" aria-label="Test"
+    <div id="texts">
+      <input type="text" id="thetext-line" class="inp"
+             placeholder="Answer" aria-label="Answer"
              autocomplete="off" autocorrect="off" autocapitalize="off"
              spellcheck="false"
-      /><button id="thetext-submit" tabindex="-1">&#x25B8;</button>
+      /><textarea id="thetext-area" class="inp" placeholder="Question"
+      ></textarea><button id="thetext-submit" tabindex="-1">&#x25B8;</button>
     </div>
   </div>
-  <div id="login-container" class="container" style="display: none;"><div>
+  <form id="login-container" class="container" style="display: none;">
+    <div>
       <input type="text" id="user" class="inp"
              placeholder="Username" aria-label="Username"
              autocomplete="username" />
@@ -41,9 +43,9 @@
              placeholder="Password" aria-label="Password"
              autocomplete="current-password" />
     </div>
-  </div>
-  <div><div id="log"></div><div class="fadeout"></div></div>
+  </form>
 </main>
+<div id="log-container"><div id="log"></div><div class="fadeout"></div></div>
 <script src="index.js" type="text/javascript"></script>
 </body>
 </html>

@@ -71,7 +71,6 @@ html > body {
   min-height: 3.2ex; min-width: 2em;
   outline: none;
 }
-.inp { width: calc(100% - 3ex); }
 .btn { text-align: center; font-size: 150%; border: 2px outset #fff; }
 .btn.selected { border-color: #fa0; box-shadow: 4px 4px 20px #850; }
 @media only screen and (min-width: 768px) {
@@ -85,7 +84,6 @@ html > body {
 .sudo .btn, .sudo .inp {
   color: #ff0; background: #1358;
 }
-textarea.inp { min-width: 80%; height: 20ex; }
 .btn:hover, .inp:hover { filter: brightness(100%); }
 .btn:focus, .inp:focus { filter: brightness(100%); }
 .btn:focus:hover, .inp:focus:hover { filter: brightness(125%); }
@@ -99,6 +97,14 @@ textarea.inp { min-width: 80%; height: 20ex; }
   text-align: center; transform-origin: 50% 50%;
 }
 
+#thetext-line { width: 80%; }
+#thetext-area { width: 80%; height: 20ex; }
+#texts { white-space: nowrap; }
+      #texts #thetext-line { display: inline-block; }
+      #texts #thetext-area { display: none; }
+.sudo #texts #thetext-line { display: none; }
+.sudo #texts #thetext-area { display: inline-block; }
+
 #thetext-submit {
   color: #888; background: none; border: 0; filter: brightness(100%);
   cursor: pointer; display: inline-block;
@@ -107,8 +113,9 @@ textarea.inp { min-width: 80%; height: 20ex; }
   transform: scale(3); vertical-align: middle;
 }
 #thetext-submit:focus { outline: none; }
-textarea + #thetext-submit { bottom: 2ex; }
+.sudo #thetext-submit { bottom: 2ex; }
 
+#log-container { height: 20ex; }
 #log { width: 80%; margin: auto; height: 20ex; overflow: hidden; }
 #log > div   { background: none; overflow-y: hidden;
                padding: 2px; margin: 2px;

@@ -1,6 +1,7 @@
 "use strict";
 
 const passwordTest = "(password)";
+const editorInitText = "???\n  --==--\n";
 
 const $ = x => typeof x === "string" ? document.getElementById(x) : x;
 
@@ -12,7 +13,7 @@ const objQuery = o =>
 const evListener = (id, type, f) =>
   $(id).addEventListener(type, f, true);
 
-const show = (msg, kind, txt = null) => {
+const show = (msg, kind, txt = null, editor = false) => {
   const messages = $("log");
   while (messages.children.length > 12) messages.lastChild.remove();
   const fst = document.createElement("div");
@@ -25,13 +26,14 @@ const show = (msg, kind, txt = null) => {
     snd.classList.add("reuse-text");
     if (txt != passwordTest)
       snd.addEventListener("click", () => {
-        $("thetext").value = txt; $("thetext").focus(); });
+        if (editor != editorOn) toggleEditor();
+        curText.value = txt; curText.focus(); });
     fst.append(snd);
   }
   messages.prepend(fst);
   return fst;
 };
-const makeSend = (msg, txt) => show(msg, "send", txt);
+const makeSend = (msg, txt, editor) => show(msg, "send", txt, editor);
 const changeSend = (node, msg, kind) => {
   node.classList.remove("send");
   node.classList.add(kind || "bad");
@@ -55,11 +57,11 @@ const setImg = txt => {
   else { localStorage.setItem("plq-img", txt); n.append(getImg()); }
 };
 
-const sendToLogger = (x, ok = null, fail = null) => {
+const sendToLogger = (x, ok = null, fail = null, editor = false) => {
   const txt = typeof x === "string" ? x : x.innerText;
   if (txt == "") return;
   const req = new XMLHttpRequest();
-  const msg = makeSend("Sending...", txt);
+  const msg = makeSend("Sending...", txt, editor);
   req.onreadystatechange = () => {
     if (req.readyState != 4) return;
     const isImage = /^data:image\/png;base64,/.test(req.responseText);
@@ -106,27 +108,35 @@ const setSelectedButtons = txt =>
   [...$("buttons").querySelectorAll(".btn")].forEach(b =>
     b.classList[b.innerText == txt ? "add" : "remove"]("selected"));
 
-const theTextSend = clear => {
-  sendToLogger($("thetext").value.trim(),
-               clear && (() => $("thetext").value = ""));
-  $("thetext").focus();
+let curText = $("thetext-line"), editorOn = false, editorModified = false;
+const theTextSend = (clear = !editorOn) => {
+  sendToLogger(curText.value.trim(), clear && (() => curText.value = ""),
+               null, editorOn);
+  curText.focus();
 };
-const theTextKeyListen = () =>
-  evListener("thetext", "keyup", e => {
+const theTextKeyListen = (id, editor) =>
+  evListener(id, "keyup", e => {
     switch (e.key) {
     case "Enter":
-      if (editorOn && !(e.ctrlKey || e.altKey)) break;
+      if (editor && !(e.ctrlKey || e.altKey)) return;
       e.preventDefault(); e.stopImmediatePropagation();
-      theTextSend(!editorOn);
+      theTextSend(!editor);
       return;
     case "Escape":
+      if (editor) return;
       e.target.setSelectionRange(0, e.target.value.length);
       document.execCommand("insertText", false, "");
       return;
     }
   });
-theTextKeyListen();
-evListener("thetext-submit", "click", e => theTextSend(true));
+theTextKeyListen("thetext-line", false);
+theTextKeyListen("thetext-area", true);
+evListener("thetext-submit", "click", theTextSend);
+$("thetext-area").addEventListener("input", e => {
+  if (editorModified) return;
+  editorModified = true;
+  sendToLogger("New Question");
+});
 
 { // The delay D between runs starts at MIN sec, and in each iteration,
   // then it goes to D*(STEPUP/T**STEPDN) for an execution that lasted T
@@ -206,33 +216,17 @@ evListener("show-login", "click", toggleLogin);
 ["user", "pswd"].forEach(k => evListener(k, "keyup", keyLogin));
 if (!localStorage.getItem("plq-pswd")) showLogin();
 
-let editorOn = false;
 const toggleEditor = () => {
-  let t = $("thetext"), focus = document.activeElement == t, txt = t.value;
+  let focus = document.activeElement == curText;
   if (!editorOn && getUser() != "eli") return;
   editorOn = !editorOn;
-  const editorInitText = "???\n\n* \n* \n* \n* \n* ";
+  curText = $(editorOn ? "thetext-area" : "thetext-line");
   document.body.classList[editorOn ? "add" : "remove"]("sudo");
-  t.outerHTML = t.outerHTML.replace(/^(<)[a-z]+|[a-z]+(>)$/g,
-                                    editorOn ? "$1textarea$2" : "$1input$2");
-  theTextKeyListen();
-  t = $("thetext");
-  if (!editorOn)
-    txt = txt.replace(/\s+/g, "") == editorInitText.replace(/\s+/g, "")
-          ? "" : txt.replace(/ *\n */g, " ");
-  t.value = txt;
-  if (focus) t.focus();
+  if (focus) curText.focus();
   if (!editorOn) return;
-  let editorModified = false;
-  t.addEventListener("input", e => {
-    if (editorModified) return;
-    editorModified = true;
-    sendToLogger("New Question");
-  });
-  if (txt.trim() == "") {
-    t.value = editorInitText;
-    t.focus();
-    t.setSelectionRange(0,3);
+  if (curText.value.trim() == "") {
+    curText.value = editorInitText; editorModified = false;
+    curText.focus(); curText.setSelectionRange(0,3);
   }
 };
 
@@ -240,7 +234,7 @@ const editorDone = () => {
   if (!editorOn) return;
   theTextSend(true);
   toggleEditor();
-  $("thetext").value = "Done!";
+  curText.value = "Done!";
   theTextSend(true);
 };
 
@@ -273,7 +267,7 @@ const timerAdd = d => () => {
 };
 
 const hotKeys = new Map([
-  ["t", () => $("thetext").focus()],
+  ["t", () => curText.focus()],
   ["l", toggleLogin],
   ["s", toggleEditor],
   ["d", editorDone],
