@@ -1,7 +1,9 @@
 "use strict";
 
-const passwordTest = "(password)";
+const passwordTest   = "(password)";
 const editorInitText = "???\n  --==--\n";
+const sudoUser       = "eli";
+const sudoButtons    = ["Start", "Stop"];
 
 const $ = x => typeof x === "string" ? document.getElementById(x) : x;
 
@@ -68,7 +70,8 @@ const sendToLogger = (x, ok = null, fail = null, editor = false) => {
     const reply = !isImage ? req.responseText
                            : (setImg(req.responseText), getImg());
     console.log("--> %o", reply);
-    const isOK = req.status == 200 && (isImage || req.responseText == "OK");
+    const isOK = req.status == 200
+              && (isImage || /^OK\b/.test(req.responseText));
     changeSend(msg, reply, isOK && "ok");
     if (isOK) setSelectedButtons(txt), ok && ok(); else fail && fail();
   };
@@ -80,6 +83,8 @@ const sendToLogger = (x, ok = null, fail = null, editor = false) => {
 
 let buttons = [], buttonLines = "";
 const setButtons = (bs = "") => {
+  if (bs == "" && getUser() == sudoUser)
+    bs = sudoButtons.map(b => `>${b}!`).join("\n");
   bs = bs.split("\n").map(s => s.trim()).filter(s => s.length);
   const bLines = bs.join("\n");
   if (bLines == buttonLines) return;
@@ -102,7 +107,7 @@ const setButtons = (bs = "") => {
     .then(sleep(50)) .then(()=> div.style.height = `${div.scrollHeight}px`)
     .then(sleep(500)).then(()=> div.style.height = ``);
 };
-setButtons();
+setTimeout(setButtons, 50);
 
 const setSelectedButtons = txt =>
   [...$("buttons").querySelectorAll(".btn")].forEach(b =>
@@ -218,7 +223,7 @@ if (!localStorage.getItem("plq-pswd")) showLogin();
 
 const toggleEditor = () => {
   let focus = document.activeElement == curText;
-  if (!editorOn && getUser() != "eli") return;
+  if (!editorOn && getUser() != sudoUser) return;
   editorOn = !editorOn;
   curText = $(editorOn ? "thetext-area" : "thetext-line");
   document.body.classList[editorOn ? "add" : "remove"]("sudo");
@@ -234,7 +239,7 @@ const editorDone = () => {
   if (!editorOn) return;
   theTextSend(true);
   toggleEditor();
-  curText.value = "Done!";
+  curText.value = ">Done!";
   theTextSend(true);
 };
 
@@ -254,7 +259,7 @@ const timerUpdate = () => {
   } else timerAdd(0)();
 };
 const timerAdd = d => () => {
-  if (getUser() != "eli") return;
+  if (getUser() != sudoUser) return;
   const now = Date.now();
   timerDeadline = (timerDeadline || now) + d*1000;
   if (!!timerRunning === (timerDeadline > now)) return;
