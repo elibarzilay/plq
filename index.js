@@ -3,7 +3,8 @@
 const passwordTest   = "(password)";
 const editorInitText = "???\n  --==--\n";
 const sudoUser       = "eli";
-const sudoButtons    = ["Start", "Stop"];
+const opButtons      = ["Status", "Start", "Stop"];
+const opWrap         = s => `〈!${s}!〉`;
 
 const $ = x => typeof x === "string" ? document.getElementById(x) : x;
 
@@ -59,8 +60,7 @@ const setImg = txt => {
   else { localStorage.setItem("plq-img", txt); n.append(getImg()); }
 };
 
-const sendToLogger = (x, ok = null, fail = null, editor = false) => {
-  const txt = typeof x === "string" ? x : x.innerText;
+const sendToLogger = (txt, ok = null, fail = null, editor = false) => {
   if (txt == "") return;
   const req = new XMLHttpRequest();
   const msg = makeSend("Sending...", txt, editor);
@@ -81,24 +81,27 @@ const sendToLogger = (x, ok = null, fail = null, editor = false) => {
   req.send();
 };
 
-let buttons = [], buttonLines = "";
+let lastButtons = "";
 const setButtons = (bs = "") => {
-  if (bs == "" && getUser() == sudoUser)
-    bs = sudoButtons.map(b => `>${b}!`).join("\n");
   bs = bs.split("\n").map(s => s.trim()).filter(s => s.length);
-  const bLines = bs.join("\n");
-  if (bLines == buttonLines) return;
-  buttonLines = bLines, buttons = bs;
+  const isSudo = getUser() == sudoUser
+              && (lastButtons.length && lastButtons[0] == "*" ? true : "new");
+  const newButtons = (isSudo ? "*" : "-") + "\n" + bs.join("\n");
+  if (newButtons == lastButtons) return; else lastButtons = newButtons;
   const div = $("buttons");
+  const mkButton = op => txt => {
+    const b = document.createElement("button");
+    b.classList.add("btn");
+    if (op) b.classList.add("op");
+    b.innerText = txt;
+    evListener(b, "click", () => sendToLogger(!op ? txt : opWrap(txt)));
+    div.appendChild(b);
+  };
   const createElts = () => {
     while (div.firstChild) div.firstChild.remove();
-    buttons.forEach(txt => {
-      const b = document.createElement("button");
-      b.classList.add("btn");
-      b.innerText = txt;
-      evListener(b, "click", () => sendToLogger(b));
-      div.appendChild(b);
-    });
+    if (isSudo) opButtons.forEach(mkButton(true));
+    bs.forEach(mkButton(false));
+    if (isSudo == "new") setTimeout(() => sendToLogger(opWrap("status")), 250);
   };
   div.style.height = `${div.scrollHeight}px`;
   Promise.resolve()
@@ -178,7 +181,9 @@ const setLogin = () => {
   localStorage.setItem("plq-user", user);
   localStorage.setItem("plq-pswd", md5(pswd));
   setImg(null);
-  sendToLogger(passwordTest, hideLogin,
+  sendToLogger(passwordTest,
+               () => { hideLogin();
+                       if (user == sudoUser) setButtons(); },
                () => { localStorage.removeItem("plq-pswd");
                        localStorage.removeItem("plq-user");
                        setImg(null); });
@@ -238,9 +243,7 @@ const toggleEditor = () => {
 const editorDone = () => {
   if (!editorOn) return;
   theTextSend(true);
-  toggleEditor();
-  curText.value = ">Done!";
-  theTextSend(true);
+  sendToLogger(opWrap("Done"), (() => curText.value = ""));
 };
 
 let timerRunning = null, timerDeadline = null, timerShown = null;

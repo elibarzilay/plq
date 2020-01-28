@@ -84,6 +84,9 @@ html > body {
 .sudo .btn, .sudo .inp {
   color: #ff0; background: #1358;
 }
+.btn.op {
+  background: #a848; border-color: #af0; box-shadow: 4px 4px 20px #580;
+}
 .btn:hover, .inp:hover { filter: brightness(100%); }
 .btn:focus, .inp:focus { filter: brightness(100%); }
 .btn:focus:hover, .inp:focus:hover { filter: brightness(125%); }
