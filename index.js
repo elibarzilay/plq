@@ -1,10 +1,10 @@
 "use strict";
 
-const passwordTest   = "(password)";
-const editorInitText = "???\n  --==--\n";
-const sudoUser       = "eli";
-const opButtons      = ["Status", "Start", "Stop"];
-const opWrap         = s => `〈!${s}!〉`;
+const passwordTest  = "(password)";
+const sudoUser      = "eli";
+const opButtons     = ["Status", "Start", "Stop"];
+const opWrap        = s => `〈!${s}!〉`;
+const qeditInitText = "???\n  --==--\n";
 
 const $ = x => typeof x === "string" ? document.getElementById(x) : x;
 
@@ -110,7 +110,6 @@ const setButtons = (bs = "") => {
     .then(sleep(50)) .then(()=> div.style.height = `${div.scrollHeight}px`)
     .then(sleep(500)).then(()=> div.style.height = ``);
 };
-setTimeout(setButtons, 50);
 
 const setSelectedButtons = txt =>
   [...$("buttons").querySelectorAll(".btn")].forEach(b =>
@@ -139,20 +138,22 @@ const theTextKeyListen = (id, editor) =>
   });
 theTextKeyListen("thetext-line", false);
 theTextKeyListen("thetext-area", true);
-evListener("thetext-submit", "click", theTextSend);
+evListener("thetext-submit", "click", () => theTextSend());
+evListener("thetext-done",   "click", () => editorDone());
 $("thetext-area").addEventListener("input", e => {
   if (editorModified) return;
   editorModified = true;
   sendToLogger("New Question");
 });
 
-{ // The delay D between runs starts at MIN sec, and in each iteration,
+const startWS = (() => {
+  // The delay D between runs starts at MIN sec, and in each iteration,
   // then it goes to D*(STEPUP/T**STEPDN) for an execution that lasted T
   // secs, kept within the MIN..MAX bounds.
   const MIN = 1, MAX = 60, STEPUP = 1.5,
         STEPDN = STEPUP ** (1/30); // T = 30s => no change in delay
   let ws, start, delay = MIN;
-  const startWS = () => {
+  return () => {
     start = Date.now();
     ws = new WebSocket("wss://plq.barzilay.org/ws");
     ws.onmessage = e => setButtons(e.data);
@@ -165,8 +166,7 @@ $("thetext-area").addEventListener("input", e => {
       setTimeout(startWS, 1000 * delay);
     };
   };
-  startWS();
-}
+})();
 
 const getLogin = () =>
   ["plq-user", "plq-pswd"].map(i => localStorage.getItem(i));
@@ -226,24 +226,28 @@ evListener("show-login", "click", toggleLogin);
 ["user", "pswd"].forEach(k => evListener(k, "keyup", keyLogin));
 if (!localStorage.getItem("plq-pswd")) showLogin();
 
+const resetEditor = (force = false) => {
+  if (!editorOn) return;
+  if (force || curText.value.trim() == "") {
+    curText.value = qeditInitText; editorModified = false;
+    curText.focus(); curText.setSelectionRange(0,3);
+  }
+};
+
 const toggleEditor = () => {
   let focus = document.activeElement == curText;
   if (!editorOn && getUser() != sudoUser) return;
   editorOn = !editorOn;
   curText = $(editorOn ? "thetext-area" : "thetext-line");
-  document.body.classList[editorOn ? "add" : "remove"]("sudo");
+  document.body.classList[editorOn ? "add" : "remove"]("qedit");
   if (focus) curText.focus();
-  if (!editorOn) return;
-  if (curText.value.trim() == "") {
-    curText.value = editorInitText; editorModified = false;
-    curText.focus(); curText.setSelectionRange(0,3);
-  }
+  resetEditor();
 };
 
 const editorDone = () => {
   if (!editorOn) return;
   theTextSend(true);
-  sendToLogger(opWrap("Done"), (() => curText.value = ""));
+  sendToLogger(opWrap("Done"), () => resetEditor(true));
 };
 
 let timerRunning = null, timerDeadline = null, timerShown = null;
@@ -299,6 +303,8 @@ window.addEventListener("load", () => {
     .then(reg => console.log(`ServiceWorker registered for: ${reg.scope}`),
           err => console.log(`ServiceWorker failure: ${err}`));
   }
+  setButtons();
+  setTimeout(startWS, 100);
 });
 
 let installEvt = null;

@@ -43,7 +43,7 @@ html > body {
 
 .login-image { height: 2ex; vertical-align: middle; }
 #menu-handle > .login-image { height: 4ex; }
-.sudo #menu-handle > .login-image { height: 8ex; }
+.qedit #menu-handle > .login-image { height: 8ex; }
 
 .container {
   margin: 5px;
@@ -74,14 +74,14 @@ html > body {
 .btn { text-align: center; font-size: 150%; border: 2px outset #fff; }
 .btn.selected { border-color: #fa0; box-shadow: 4px 4px 20px #850; }
 @media only screen and (min-width: 768px) {
-  .inp, .btn, #thetext-submit { font-size: 200%; }
-  #thetext-submit { vertical-align: unset !important; }
+  .inp, .btn, #thetext-submit, #thetext-done { font-size: 150%; }
+  #thetext-submit, #thetext-done { vertical-align: unset !important; }
 }
 .inp::placeholder {
   font-style: italic; text-shadow: none; color: #888;
   transform: scale(0.5); transform-origin: 0% 50%;
 }
-.sudo .btn, .sudo .inp {
+.qedit .btn, .qedit .inp {
   color: #ff0; background: #1358;
 }
 .btn.op {
@@ -91,6 +91,8 @@ html > body {
 .btn:focus, .inp:focus { filter: brightness(100%); }
 .btn:focus:hover, .inp:focus:hover { filter: brightness(125%); }
 .btn:active { filter: brightness(150%) !important; }
+
+textarea.inp { resize: both; }
 
 #login-container .inp {
   text-align: center;
@@ -103,20 +105,23 @@ html > body {
 #thetext-line { width: 80%; }
 #thetext-area { width: 80%; height: 20ex; }
 #texts { white-space: nowrap; }
-      #texts #thetext-line { display: inline-block; }
-      #texts #thetext-area { display: none; }
-.sudo #texts #thetext-line { display: none; }
-.sudo #texts #thetext-area { display: inline-block; }
+       #texts #thetext-line { display: inline-block; }
+       #texts #thetext-area { display: none; }
+.qedit #texts #thetext-line { display: none; }
+.qedit #texts #thetext-area { display: inline-block; }
 
-#thetext-submit {
+#thetext-submit, #thetext-done {
   color: #888; background: none; border: 0; filter: brightness(100%);
   cursor: pointer; display: inline-block;
-  /* width: 5ex; margin-left: -5ex; */
-  position: relative; right: 5ex;
-  transform: scale(3); vertical-align: middle;
+  position: relative; right: 3ex; bottom: 0;
+  padding: 0; margin: 0; margin-inline-start: 0; margin-inline-end: 0;
+  line-height: 1ex; width: 1ex; margin-left: -1ex;
+  transform: scale(2); vertical-align: middle;
 }
-#thetext-submit:focus { outline: none; }
-.sudo #thetext-submit { bottom: 2ex; }
+#thetext-submit:focus, #thetext-done:focus { outline: none; }
+.qedit #thetext-submit { right: 3ex; bottom: 1.75ex; }
+       #thetext-done   { display: none; }
+.qedit #thetext-done   { right: 6ex; bottom: 2.25ex; display: inline-block; }
 
 #log-container { height: 20ex; }
 #log { width: 80%; margin: auto; height: 20ex; overflow: hidden; }
