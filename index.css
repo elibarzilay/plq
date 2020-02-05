@@ -46,23 +46,21 @@ html > body {
 .qedit #menu-handle > .login-image { height: 8ex; }
 
 .container {
-  max-width: 1220px;
+  max-width: 1080px;
   margin: 5px auto;
   text-align: center;
   align-self: center;
 }
 
 #buttons {
+  /* text-indent: 3em; */
   margin-top: 6ex;
   overflow-y: hidden;
   transition: height 0.4s;
-}
-
-@media only screen and (max-width: 768px) {
-  #buttons {
-    display: flex;
-    flex-direction: column;
-  }
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .btn, .inp {
@@ -80,10 +78,14 @@ html > body {
 }
 .btn { text-align: center; font-size: 150%; border: 2px outset #fff; }
 .btn.selected { border-color: #fa0; box-shadow: 4px 4px 20px #850; }
-@media only screen and (min-width: 768px) {
+@media only screen and (min-width: 769px) {
   .inp, .btn, #thetext-submit, #thetext-done { font-size: 150%; }
   #thetext-submit, #thetext-done { vertical-align: unset !important; }
 }
+/* @media only screen and (max-width: 768px) {
+  #buttons { flex-direction: row; }
+  .btn { min-width: 30vw; }
+} */
 .inp::placeholder {
   font-style: italic; text-shadow: none; color: #888;
   transform: scale(0.5); transform-origin: 0% 50%;

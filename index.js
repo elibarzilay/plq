@@ -309,7 +309,6 @@ window.addEventListener("load", () => {
 
 let installEvt = null;
 window.addEventListener("beforeinstallprompt", e => {
-  e.preventDefault(); // Prevent Chrome <=67 showing a prompt
   $("install").style.display = "block";
   installEvt = e;
 });
