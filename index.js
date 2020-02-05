@@ -96,11 +96,15 @@ const setButtons = (bs = "") => {
     b.innerText = txt;
     evListener(b, "click", () => sendToLogger(!op ? txt : opWrap(txt)));
     div.appendChild(b);
+    return b;
   };
   const createElts = () => {
     while (div.firstChild) div.firstChild.remove();
     if (isSudo) opButtons.forEach(mkButton(true));
-    bs.forEach(mkButton(false));
+    const buttons = bs.map(mkButton(false));
+    const max =
+      buttons.map(b => b.scrollWidth).reduce((x,y) => Math.max(x,y), 0);
+    buttons.forEach(b => b.style.width = max + "px");
     if (isSudo == "new") setTimeout(() => sendToLogger(opWrap("status")), 250);
   };
   div.style.height = `${div.scrollHeight}px`;
