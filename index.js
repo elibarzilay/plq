@@ -5,6 +5,8 @@ const sudoUser      = "eli";
 const opButtons     = ["Status", "Start", "Stop"];
 const opWrap        = s => `〈!${s}!〉`;
 const qeditInitText = "???\n  --==--\n";
+const multiAll      = "〈all〉";
+const multiNone     = "〈none〉";
 
 const $ = x => typeof x === "string" ? document.getElementById(x) : x;
 
@@ -81,30 +83,63 @@ const sendToLogger = (txt, ok = null, fail = null, editor = false) => {
   req.send();
 };
 
+class BSet extends Set {
+  toggle(val) { if (this.has(val)) this.delete(val); else this.add(val); }
+  addAll(vals) { vals.forEach(v => this.add(v)); }
+  toString() { return this.size ? [...this.values()].join("; ") : multiNone; }
+}
+
 let lastButtons = "";
 const setButtons = (bs = "") => {
+  let flags = "";
+  { const m = bs.match(/^〈〈(.*)〉〉\n([\s\S]*)$/);
+    if (m) { flags = m[1]; bs = m[2]; }
+  }
   bs = bs.split("\n").map(s => s.trim()).filter(s => s.length);
+  const isMulti = flags.includes("+");
   const isSudo = getUser() == sudoUser
               && (lastButtons.length && lastButtons[0] == "*" ? true : "new");
   const newButtons = (isSudo ? "*" : "-") + "\n" + bs.join("\n");
   if (newButtons == lastButtons) return; else lastButtons = newButtons;
   const div = $("buttons");
-  const mkButton = op => txt => {
-    const b = document.createElement("button");
-    b.classList.add("btn");
-    if (op) b.classList.add("op");
-    b.innerText = txt;
-    evListener(b, "click", () => sendToLogger(!op ? txt : opWrap(txt)));
+  div.dataset.mode = isMulti ? "multi" : "";
+  const toSend = !isMulti ? b => b : (() => {
+    const multi = new BSet();
+    return b => ((b == multiNone ? multi.clear() :
+                  b == multiAll  ? multi.addAll(bs) :
+                  multi.toggle(b)),
+                 multi.toString());
+  })();
+  const mkBreak = () => {
+    const b = document.createElement("div");
+    b.classList.add("break");
     div.appendChild(b);
     return b;
   };
+  const mkButton = (txt, wrap = toSend) => {
+    const b = document.createElement("button");
+    b.classList.add("btn");
+    if (wrap === opWrap) b.classList.add("op");
+    b.innerText = txt;
+    div.appendChild(b);
+    evListener(b, "click", () => sendToLogger(wrap(txt)));
+    return b;
+  };
+  const equalizeWidths = bs => {
+    const max = bs.map(b => b.scrollWidth).reduce((x,y) => Math.max(x,y), 0);
+    bs.forEach(b => b.style.width = max + "px");
+  };
   const createElts = () => {
     while (div.firstChild) div.firstChild.remove();
-    if (isSudo) opButtons.forEach(mkButton(true));
-    const buttons = bs.map(mkButton(false));
-    const max =
-      buttons.map(b => b.scrollWidth).reduce((x,y) => Math.max(x,y), 0);
-    buttons.forEach(b => b.style.width = max + "px");
+    if (isSudo) {
+      equalizeWidths(opButtons.map(b => mkButton(b, opWrap)));
+      mkBreak();
+    }
+    equalizeWidths(bs.map(b => mkButton(b)));
+    if (isMulti) {
+      mkBreak();
+      equalizeWidths([mkButton(multiAll), mkButton(multiNone)]);
+    }
     if (isSudo == "new") setTimeout(() => sendToLogger(opWrap("status")), 250);
   };
   div.style.height = `${div.scrollHeight}px`;
@@ -115,9 +150,21 @@ const setButtons = (bs = "") => {
     .then(sleep(500)).then(()=> div.style.height = ``);
 };
 
-const setSelectedButtons = txt =>
-  [...$("buttons").querySelectorAll(".btn")].forEach(b =>
-    b.classList[b.innerText == txt ? "add" : "remove"]("selected"));
+const setSelectedButtons = txt => {
+  const div = $("buttons");
+  const bs = [...div.querySelectorAll(".btn:not(.op)")];
+  const setSel = (b, sel) => b.classList[sel ? "add" : "remove"]("selected");
+  if (div.dataset.mode != "multi")
+    return bs.forEach(b => setSel(b, b.innerText == txt));
+  const txts = txt == multiNone ? [] : txt.split(/ *; */);
+  let all = true, none = true;
+  bs.forEach(b => { // relies on none/all being at the end
+    if (b.innerText == multiAll) setSel(b, all);
+    else if (b.innerText == multiNone) setSel(b, none);
+    else if (txts.includes(b.innerText)) { none = false; setSel(b, true);  }
+    else                                 { all  = false; setSel(b, false); }
+  });
+};
 
 let curText = $("thetext-line"), editorOn = false, editorModified = false;
 const theTextSend = (clear = !editorOn) => {
@@ -251,7 +298,7 @@ const toggleEditor = () => {
 const editorDone = () => {
   if (!editorOn) return;
   theTextSend(true);
-  sendToLogger(opWrap("Done"), () => resetEditor(true));
+  sendToLogger(opWrap("done"), () => resetEditor(true));
 };
 
 let timerRunning = null, timerDeadline = null, timerShown = null;

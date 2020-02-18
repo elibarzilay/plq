@@ -62,6 +62,7 @@ html > body {
   justify-content: center;
   flex-wrap: wrap;
 }
+#buttons .break { flex-basis: 100%; height: 0; }
 
 .btn, .inp {
   color: #ff8;
@@ -77,7 +78,7 @@ html > body {
   outline: none;
 }
 .btn { text-align: center; font-size: 150%; border: 2px outset #fff; }
-.btn.selected { border-color: #fa0; box-shadow: 4px 4px 20px #850; }
+.btn.selected { border-color: #fd0; box-shadow: 4px 4px 20px #870; }
 @media only screen and (min-width: 769px) {
   .inp, .btn, #thetext-submit, #thetext-done { font-size: 150%; }
   #thetext-submit, #thetext-done { vertical-align: unset !important; }
@@ -95,6 +96,7 @@ html > body {
 }
 .btn.op {
   background: #a848; border-color: #af0; box-shadow: 4px 4px 20px #580;
+  font-size: 75%;
 }
 .btn:hover, .inp:hover { filter: brightness(100%); }
 .btn:focus, .inp:focus { filter: brightness(100%); }
