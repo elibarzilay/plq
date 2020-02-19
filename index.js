@@ -126,7 +126,8 @@ const setButtons = (bs = "") => {
     return b;
   };
   const equalizeWidths = bs => {
-    const max = bs.map(b => b.scrollWidth).reduce((x,y) => Math.max(x,y), 0);
+    const max = bs.map(b => b.getBoundingClientRect().width)
+                  .reduce((x,y) => Math.max(x,y), 0);
     bs.forEach(b => b.style.width = max + "px");
   };
   const createElts = () => {
@@ -140,7 +141,7 @@ const setButtons = (bs = "") => {
       mkBreak();
       equalizeWidths([mkButton(multiAll), mkButton(multiNone)]);
     }
-    if (isSudo == "new") setTimeout(() => sendToLogger(opWrap("status")), 250);
+    if (isSudo == "new") setTimeout(() => sendToLogger(opWrap("Status")), 250);
   };
   div.style.height = `${div.scrollHeight}px`;
   Promise.resolve()
@@ -298,7 +299,7 @@ const toggleEditor = () => {
 const editorDone = () => {
   if (!editorOn) return;
   theTextSend(true);
-  sendToLogger(opWrap("done"), () => resetEditor(true));
+  sendToLogger(opWrap("Done"), () => resetEditor(true));
 };
 
 let timerRunning = null, timerDeadline = null, timerShown = null;
@@ -306,14 +307,19 @@ const timerUpdate = () => {
   const show = Math.ceil((timerDeadline - Date.now()) / 1000);
   if (timerShown == show) return;
   const pad2 = n => n < 10 ? "0"+n : n;
+  const tDiv = $("timer");
+  const setText = (txt, tag = "span") => {
+    tDiv.innerHTML = `<div><${tag}>${txt}</${tag}></div>`;
+    tDiv.style.width = tDiv.children[0].getBoundingClientRect().width + "px";
+  }
   if (show >= 0) {
     timerShown = show;
-    $("timer").classList.remove("over");
-    $("timer").innerHTML = show < 60 ? show
-                           : Math.floor(show/60) + ":" + pad2(show%60);
+    tDiv.classList.remove("over");
+    setText(show<60 ? show : Math.floor(show/60)+":"+pad2(show%60), "code");
   } else if (show >= -10) {
-    $("timer").classList.add("over");
-    $("timer").innerHTML = "!!!BZZZ!!!";
+    tDiv.classList.add("over");
+    const bzz = ["Bz", "Bzz", "Bzzz", "BZZZ"];
+    setText("!!!"+bzz[Math.min(Math.floor((-show-1)/2), bzz.length-1)]+"!!!");
   } else timerAdd(0)();
 };
 const timerAdd = d => () => {
@@ -321,9 +327,12 @@ const timerAdd = d => () => {
   const now = Date.now();
   timerDeadline = (timerDeadline || now) + d*1000;
   if (!!timerRunning === (timerDeadline > now)) return;
-  $("timer").classList.toggle("active"); $("timer").style.opacity = 0;
-  $("timer").classList.remove("over");
-  setTimeout(() => $("timer").style.opacity = 0.9, 100);
+  const tDiv = $("timer");
+  tDiv.classList.toggle("active");
+  tDiv.classList.remove("over");
+  tDiv.style.opacity = 0;
+  tDiv.style.width = "";
+  setTimeout(() => tDiv.style.opacity = 0.9, 100);
   if (timerRunning) { clearInterval(timerRunning); timerRunning = null; }
   if (timerDeadline > now) timerRunning = setInterval(timerUpdate, 100);
   else timerDeadline = null;
