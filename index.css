@@ -1,19 +1,18 @@
 html > body {
   font-family: Arial;
-  color: #fff;
-  background: #324;
-  margin: 0;
-  padding: 1ex;
+  --page-bg: #324;
+  color: #fff; background: var(--page-bg);
+  margin: 0; padding: 1ex;
+  overflow-y: hidden;
 }
 
 code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
 
-#navigation {
-  position: absolute; left: 20px; top: 20px;
-  z-index: 99; opacity: 0.975;
-  display: flex; flex-direction: column;
+#side-menu {
+  position: absolute; left: 0; top: 0;
+  opacity: 0.975; display: flex; flex-direction: column;
 }
-#menu-handle, #nav-links {
+#menu-handle, #side-links {
   color: #ccc; background: #2d1d3d; border: 0;
 }
 #menu-handle {
@@ -23,7 +22,7 @@ code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
 #menu-handle > * {
   background: none; border: 0; color: #ccc; padding: 1ex; outline: none;
 }
-#nav-links {
+#side-links {
   font-size: 80%;
   flex-grow: 1;
   margin: 0; padding: 0.75ex 0; width: 0;
@@ -31,17 +30,17 @@ code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
   transition: all 0.4s;
   border-radius: 0% 1ex 1ex 1ex;
 }
-#nav-links.expanded { padding: 0.75ex 1.5ex; width: 100%; }
-#nav-links > a {
+#side-links.expanded { padding: 0.75ex 1.5ex; width: 100%; }
+#side-links > a {
   display: block;
   color: #ccc;
   text-decoration: none;
   outline: none;
   margin: 1ex 0;
 }
-#nav-links > #install { display: none; }
-#menu-handle:hover,  #nav-links > a:hover  { background: #452e5c; }
-#menu-handle:active, #nav-links > a:active { background: #573a74; }
+#side-links > #install { display: none; }
+#menu-handle:hover,  #side-links > a:hover  { background: #452e5c; }
+#menu-handle:active, #side-links > a:active { background: #573a74; }
 
 .login-image { height: 2ex; vertical-align: middle; }
 #menu-handle > .login-image { height: 4ex; }
@@ -55,8 +54,8 @@ code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
 }
 
 #buttons {
-  /* text-indent: 3em; */
-  margin-top: 6ex;
+  /* text-indent: 3em; to avoid side-menu handle */
+  margin-top: 1ex;
   overflow-y: hidden;
   transition: height 0.4s;
   display: flex;
@@ -68,7 +67,9 @@ code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
 
 .btn, .inp {
   color: #ff8;
-  background: #2598;
+  --bg:  #2598;
+  --sel: #fd0;
+  background: var(--bg);
   filter: brightness(75%);
   transition: filter 0.5s, background 0.5s;
   text-shadow: 0px 0px 8px #000;
@@ -80,7 +81,22 @@ code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
   outline: none;
 }
 .btn { text-align: center; font-size: 150%; border: 2px outset #fff; }
-.btn.selected { border-color: #fd0; box-shadow: 4px 4px 20px #870; }
+.btn.confirmed {
+  /* border-color: var(--sel); box-shadow: 4px 4px 20px #870; */
+  background: radial-gradient(circle at 0.5ex 0.5ex,
+                              var(--sel) 3px, #0000 4px),
+              var(--bg);
+}
+.btn.selected  {
+  background: radial-gradient(circle at 0.5ex 0.5ex,
+                              #0000 2px, var(--sel) 4px, #0000 5px),
+              var(--bg);
+}
+.btn.selected.confirmed  {
+  background: radial-gradient(circle at 0.5ex 0.5ex,
+                              var(--sel) 4px, #0000 5px),
+              var(--bg);
+}
 @media only screen and (min-width: 769px) {
   .inp, .btn, #thetext-submit, #thetext-done { font-size: 150%; }
   #thetext-submit, #thetext-done { vertical-align: unset !important; }
@@ -94,7 +110,7 @@ code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
   transform: scale(0.5); transform-origin: 0% 50%;
 }
 .qedit .btn, .qedit .inp {
-  color: #ff0; background: #1358;
+  color: #ff0; --bg: #1358;
 }
 .btn.op {
   background: #a848; border-color: #af0; box-shadow: 4px 4px 20px #580;
@@ -159,7 +175,7 @@ textarea.inp { resize: both; }
 .fadeout {
   position: relative; z-index: 1; pointer-events: none;
   width: 100%; height: 10ex; top: -10ex;
-  background-image: linear-gradient(to bottom, #3240, #324f 90%);
+  background-image: linear-gradient(to bottom, #0000, var(--page-bg) 90%);
 }
 
 #timer {
