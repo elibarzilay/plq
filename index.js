@@ -4,7 +4,7 @@ const passwordTest  = "(password)";
 const sudoUser      = "eli";
 const opButtons     = ["Status", "Start", "Stop"];
 const opWrap        = s => `〈!${s}!〉`;
-const qeditInitText = "???\n  --==--\n";
+const qeditInitText = "???\n  --==--\n=> ";
 const multiAll      = "〈all〉";
 const multiNone     = "〈none〉";
 
@@ -15,7 +15,7 @@ const rec = f => f((...xs) => rec(f)(...xs));
 const sleep = ms => ()=> new Promise(res => setTimeout(res, ms));
 
 const objQuery = o =>
-  Object.keys(o).map(k => `${k}=${encodeURIComponent(o[k])}`).join("&")
+  Object.keys(o).map(k => `${k}=${encodeURIComponent(o[k])}`).join("&");
 
 const evListener = (id, type, f) =>
   $(id).addEventListener(type, f, true);
@@ -93,7 +93,7 @@ const setButtons = (bs = lastRawButtons) => {
   const isMulti = flags.includes("+");
   const isSudo = getUser() == sudoUser
               && (lastButtons && lastButtons[0] == "*" ? true : "new");
-  const newButtons = (isSudo ? "*" : "-") + "\n" + bs.join("\n");
+  const newButtons = `${isSudo ? "*" : "-"}\n${flags}\n${bs.join("\n")}`;
   if (bs && newButtons == lastButtons) return; else lastButtons = newButtons;
   const div = $("buttons");
   div.dataset.mode = isMulti ? "multi" : "";
@@ -298,7 +298,6 @@ const toggleEditor = ()=> {
 
 const editorDone = ()=> {
   if (!editorOn) return;
-  theTextSend(true);
   send(opWrap("Done"), ()=> resetEditor(true));
 };
 
