@@ -278,8 +278,14 @@ evListener("show-login", "click", toggleLogin);
 ["user", "pswd"].forEach(k => evListener(k, "keyup", keyLogin));
 if (!localStorage.getItem("plq-pswd")) showLogin();
 
+let doneText = "";
 const resetEditor = (force = false) => {
   if (!editorOn) return;
+  if (curText.value != doneText) {
+    doneText = curText.value;
+    curText.setSelectionRange(0, doneText.length);
+    return;
+  }
   if (force || curText.value.trim() == "") {
     curText.value = qeditInitText; editorModified = false;
     curText.focus(); curText.setSelectionRange(0,3);
@@ -302,6 +308,14 @@ const editorDone = ()=> {
 };
 
 let timerRunning = null, timerDeadline = null, timerShown = null;
+const audio = $("timer-audio");
+const playSound = (name) => {
+  audio.pause();
+  audio.currentTime = 0;
+  if (name == "") return;
+  audio.src = `${name}.mp3`;
+  audio.play();
+};
 const timerUpdate = ()=> {
   const show = Math.ceil((timerDeadline - Date.now()) / 1000);
   if (timerShown == show) return;
@@ -311,30 +325,43 @@ const timerUpdate = ()=> {
     tDiv.innerHTML = `<div><${tag}>${txt}</${tag}></div>`;
     tDiv.style.width = tDiv.children[0].getBoundingClientRect().width + "px";
   }
+  audio.volume = show > 10 ? 0 : (10-show+1)/50;
+  if (1 <= show && show <= 10) playSound("tick");
+  else if (show == 0) playSound("alarm");
+  else if (show == -10) playSound("over");
+  timerShown = show;
   if (show >= 0) {
-    timerShown = show;
     tDiv.classList.remove("over");
     setText(show<60 ? show : Math.floor(show/60)+":"+pad2(show%60), "code");
   } else if (show >= -10) {
     tDiv.classList.add("over");
-    const bzz = ["Bz", "Bzz", "Bzzz", "BZZZ"];
-    setText("!!!"+bzz[Math.min(Math.floor((-show-1)/2), bzz.length-1)]+"!!!");
+    const bzz = ["Fr", "Frr", "Frrr", "Frrrr",
+                 "FRrrr", "FRRrr", "FRRRr", "FRRRR"];
+    setText("!!!"+bzz[Math.min((-show-1), bzz.length-1)]+"!!!");
   } else timerAdd(0)();
 };
+let quickAdjustTotal = 0;
 const timerAdd = d => ()=> {
   if (getUser() != sudoUser) return;
   const now = Date.now();
-  timerDeadline = (timerDeadline || now) + d*1000;
+  if (!timerDeadline && d < 0) return;
+  if (!timerDeadline || (now + quickAdjustTotal - timerDeadline) < 2000) {
+    quickAdjustTotal += 30000 * d;
+    timerDeadline = now + quickAdjustTotal;
+  } else {
+    quickAdjustTotal = Infinity;
+    timerDeadline += 10000 * d;
+  }
   if (!!timerRunning === (timerDeadline > now)) return;
   const tDiv = $("timer");
-  tDiv.classList.toggle("active");
+  tDiv.classList.toggle("active", timerDeadline > now);
   tDiv.classList.remove("over");
   tDiv.style.opacity = 0;
   tDiv.style.width = "";
   setTimeout(()=> tDiv.style.opacity = 0.9, 100);
   if (timerRunning) { clearInterval(timerRunning); timerRunning = null; }
   if (timerDeadline > now) timerRunning = setInterval(timerUpdate, 100);
-  else timerDeadline = null;
+  else { timerDeadline = null; playSound(""); quickAdjustTotal = 0; }
 };
 
 const hotKeys = new Map([
@@ -342,8 +369,8 @@ const hotKeys = new Map([
   ["l", toggleLogin],
   ["s", toggleEditor],
   ["d", editorDone],
-  ["ArrowUp",   timerAdd(+10)],
-  ["ArrowDown", timerAdd(-10)]
+  ["ArrowUp",   timerAdd(+1)],
+  ["ArrowDown", timerAdd(-1)]
 ]);
 
 window.addEventListener("keydown", (e =>
