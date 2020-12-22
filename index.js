@@ -168,7 +168,7 @@ const reuseText = (txt, editor = editorOn) => ()=> {
   curText.value = txt; curText.focus();
 };
 const theTextSend = (clear = !editorOn) => {
-  const inEditor = editorOn, txt = curText.value.trim();
+  const txt = curText.value.trim();
   const onOK = ()=> { setBtnStatus(txt); if (clear) curText.value = ""; };
   setBtnStatus(txt, "selected");
   send(txt, onOK, null, reuseText(txt));
@@ -309,36 +309,55 @@ const editorDone = ()=> {
 
 let timerRunning = null, timerDeadline = null, timerShown = null;
 const audio = $("timer-audio");
-const playSound = (name) => {
+audio.soundQueue = [];
+const playNext = ()=> {
+  if (audio.paused && audio.soundQueue.length) {
+    const next = audio.soundQueue.pop();
+    if (typeof next === "function") { next(); return playNext(); }
+    audio.src = next;
+    audio.play();
+  }
+};
+audio.addEventListener("ended", playNext);
+const stopSound = ()=> {
   audio.pause();
   audio.currentTime = 0;
-  if (name == "") return;
-  audio.src = `${name}.mp3`;
-  audio.play();
+  audio.src = "";
+  audio.soundQueue.length = [];
 };
+const playSound = what => {
+  audio.soundQueue.unshift(what);
+  playNext();
+};
+
 const timerUpdate = ()=> {
   const show = Math.ceil((timerDeadline - Date.now()) / 1000);
   if (timerShown == show) return;
   const pad2 = n => n < 10 ? "0"+n : n;
   const tDiv = $("timer");
-  const setText = (txt, tag = "span") => {
-    tDiv.innerHTML = `<div><${tag}>${txt}</${tag}></div>`;
+  const setText = txt => {
+    tDiv.innerHTML = `<div>${txt}</div>`;
     tDiv.style.width = tDiv.children[0].getBoundingClientRect().width + "px";
   }
   audio.volume = show > 10 ? 0 : (10-show+1)/50;
-  if (1 <= show && show <= 10) playSound("tick");
-  else if (show == 0) playSound("alarm");
-  else if (show == -10) playSound("over");
   timerShown = show;
+  if (1 <= show && show <= 10) playSound("tick.mp3");
+  else if (show == 0 && audio.paused) {
+    playSound("tick.mp3");
+    const big = tDiv.classList.contains("big") ? "-big" : "";
+    playSound(`alarm${big}.mp3`);
+    playSound(`over${big}.mp3`);
+    playSound(timerAdd(0));
+  }
   if (show >= 0) {
     tDiv.classList.remove("over");
-    setText(show<60 ? show : Math.floor(show/60)+":"+pad2(show%60), "code");
-  } else if (show >= -10) {
+    setText(show<60 ? show : Math.floor(show/60)+":"+pad2(show%60));
+  } else if (show >= -8) {
     tDiv.classList.add("over");
     const bzz = ["Fr", "Frr", "Frrr", "Frrrr",
                  "FRrrr", "FRRrr", "FRRRr", "FRRRR"];
     setText("!!!"+bzz[Math.min((-show-1), bzz.length-1)]+"!!!");
-  } else timerAdd(0)();
+  }
 };
 let quickAdjustTotal = 0;
 const timerAdd = d => ()=> {
@@ -358,29 +377,37 @@ const timerAdd = d => ()=> {
   tDiv.classList.remove("over");
   tDiv.style.opacity = 0;
   tDiv.style.width = "";
+  timerUpdate();
   setTimeout(()=> tDiv.style.opacity = 0.9, 100);
   if (timerRunning) { clearInterval(timerRunning); timerRunning = null; }
   if (timerDeadline > now) timerRunning = setInterval(timerUpdate, 100);
-  else { timerDeadline = null; playSound(""); quickAdjustTotal = 0; }
+  else { timerDeadline = null; stopSound(); quickAdjustTotal = 0; }
 };
 
 const hotKeys = new Map([
-  ["t", ()=> curText.focus()],
-  ["l", toggleLogin],
-  ["s", toggleEditor],
-  ["d", editorDone],
-  ["ArrowUp",   timerAdd(+1)],
-  ["ArrowDown", timerAdd(-1)]
+  ["t",         ["keyup",   ()=> curText.focus()]],
+  ["l",         ["keyup",   toggleLogin]],
+  ["s",         ["keyup",   toggleEditor]],
+  ["d",         ["keyup",   editorDone]],
+  ["ArrowUp",   ["keydown", timerAdd(+1)]],
+  ["ArrowDown", ["keydown", timerAdd(-1)]],
+  ["PageUp",    ["keydown", timerAdd(+2)]],
+  ["PageDown",  ["keydown", timerAdd(-2)]],
+  ["+",         ["keyup",   ()=> $("timer").classList.add("big")]],
+  ["=",         ["keyup",   ()=> $("timer").classList.add("big")]],
+  ["-",         ["keyup",   ()=> $("timer").classList.remove("big")]]
 ]);
 
-window.addEventListener("keydown", (e =>
-  e.altKey && !e.shiftKey && !e.ctrlKey && hotKeys.has(e.key)
-  && (e.preventDefault(), e.stopImmediatePropagation())),
-  true);
-window.addEventListener("keyup", (e =>
-  e.altKey && !e.shiftKey && !e.ctrlKey && hotKeys.has(e.key)
-  && (e.preventDefault(), e.stopImmediatePropagation(), hotKeys.get(e.key)())),
-  true);
+const keyHandler = e => {
+  if (!(e.altKey && !e.shiftKey && !e.ctrlKey)) return;
+  const keydef = hotKeys.get(e.key);
+  if (!keydef) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if (e.type === keydef[0]) keydef[1]();
+};
+window.addEventListener("keydown", keyHandler, true);
+window.addEventListener("keyup",   keyHandler, true);
 
 window.addEventListener("load", ()=> {
   if ("serviceWorker" in navigator) {

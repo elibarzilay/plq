@@ -180,15 +180,26 @@ textarea.inp { resize: both; }
 
 #timer {
   background-color: #546; border: 4px solid #435; display: none;
-  position: fixed; z-index: 999; right: 4%; bottom: 4%; text-align: right;
-  margin: 0; padding: 0 1ex; overflow-x: hidden; whitespace: nowrap;
-  font-size: 400%; color: #ff0;
+  position: fixed; z-index: 999; right: 4%; bottom: 4%;
+  margin: 0; padding: 0 1ex; overflow-x: hidden; white-space: nowrap;
+  font-size: 400%; font-kerning: none; color: #ff0;
   text-shadow: 5px 5px 10px #000; box-shadow: 5px 5px 10px #000;
   opacity: 0; transition: opacity 1s, width 0.4s;
 }
-#timer div { float: right; whitespace: nowrap; }
+#timer div { margin-left: auto; float: right; white-space: nowrap; }
 #timer.active { display: flex; }
 #timer.over { animation: time-over linear 0.25s alternate infinite; }
+#timer.active.big {
+  font-family: Arial Black; font-size: 20vw; opacity: 1 !important;
+  align-items: center; justify-content: center;
+  width: unset !important; margin: 20px; left: 0; right: 0; top: 0; bottom: 0;
+  text-shadow: 0px 0px 10px #f00, 0px 0px 10px #f00,
+               10px 10px 10px #000, 0px 0px 10px #000, 0px 0px 10px #000;
+}
+#timer.active.big div { margin: 0; }
+#timer.over.big {
+  font-family: Arial; animation: time-over-big step-end 1s normal infinite;
+}
 
 @keyframes log-appearing {
     0% { height: 0; }
@@ -202,4 +213,21 @@ textarea.inp { resize: both; }
     0% { background-color: #c46; }
    50% { background-color: #c46; }
   100% { background-color: #546; }
+}
+@keyframes time-over-big {
+    0% { background-color: #110; }
+    3% { background-color: #110; }  5% { background-color: #f46; }  7% { background-color: #110; }
+    8% { background-color: #110; } 10% { background-color: #f46; } 12% { background-color: #110; }
+   13% { background-color: #110; } 15% { background-color: #f46; } 17% { background-color: #110; }
+   18% { background-color: #110; } 20% { background-color: #f46; } 22% { background-color: #110; }
+   23% { background-color: #110; } 25% { background-color: #f46; } 27% { background-color: #110; }
+   28% { background-color: #110; } 30% { background-color: #f46; } 32% { background-color: #110; }
+   50% { background-color: #110; }
+   53% { background-color: #110; } 55% { background-color: #46f; } 57% { background-color: #110; }
+   58% { background-color: #110; } 60% { background-color: #46f; } 62% { background-color: #110; }
+   63% { background-color: #110; } 65% { background-color: #46f; } 67% { background-color: #110; }
+   68% { background-color: #110; } 70% { background-color: #46f; } 72% { background-color: #110; }
+   73% { background-color: #110; } 75% { background-color: #46f; } 77% { background-color: #110; }
+   78% { background-color: #110; } 80% { background-color: #46f; } 82% { background-color: #110; }
+  100% { background-color: #110; }
 }
