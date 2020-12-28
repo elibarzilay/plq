@@ -20,6 +20,8 @@ const objQuery = o =>
 const evListener = (id, type, f) =>
   $(id).addEventListener(type, f, true);
 
+const isSudo = ()=> getUser() === sudoUser;
+
 const show = (msg_css, txt, click) => {
   const [msg, css] = Array.isArray(msg_css) ? msg_css : [msg_css, "send"];
   const messages = $("log");
@@ -91,8 +93,8 @@ const setButtons = (bs = lastRawButtons) => {
   }
   bs = bs.split("\n").map(s => s.trim()).filter(s => s.length);
   const isMulti = flags.includes("+");
-  const isSudo = getUser() == sudoUser
-              && (lastButtons && lastButtons[0] == "*" ? true : "new");
+  const sudo = isSudo()
+            && (lastButtons && lastButtons[0] == "*" ? true : "new");
   const newButtons = `${isSudo ? "*" : "-"}\n${flags}\n${bs.join("\n")}`;
   if (bs && newButtons == lastButtons) return; else lastButtons = newButtons;
   const div = $("buttons");
@@ -131,12 +133,12 @@ const setButtons = (bs = lastRawButtons) => {
   };
   const createElts = ()=> {
     while (div.firstChild) div.firstChild.remove();
-    if (isSudo) { equalWidths(opButtons.map(mkOpBtn)); mkBr(); }
+    if (sudo) { equalWidths(opButtons.map(mkOpBtn)); mkBr(); }
     btns = equalWidths(bs.map(mkBtn));
     if (isMulti) { mkBr(); equalWidths([multiAll, multiNone].map(mkBtn)); }
-    if (isSudo == "new")
+    if (sudo == "new")
       [...buttons.querySelectorAll(".btn.op")]
-        .find(b => b.innerText.match(/Status/i)).click();
+            .find(b => b.innerText.match(/Status/i)).click();
   };
   div.style.height = `${div.scrollHeight}px`;
   Promise.resolve()
@@ -293,7 +295,7 @@ const resetEditor = (force = false) => {
 };
 
 const toggleEditor = ()=> {
-  if (!editorOn && getUser() != sudoUser) return;
+  if (!editorOn && !isSudo()) return;
   let focus = document.activeElement == curText;
   editorOn = !editorOn;
   curText = $(editorOn ? "thetext-area" : "thetext-line");
@@ -361,7 +363,7 @@ const timerUpdate = ()=> {
 };
 let quickAdjustTotal = 0;
 const timerAdd = d => ()=> {
-  if (getUser() != sudoUser) return;
+  if (!isSudo()) return;
   const now = Date.now();
   if (!timerDeadline && d < 0) return;
   if (!timerDeadline || (now + quickAdjustTotal - timerDeadline) < 2000) {
