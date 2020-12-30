@@ -80,6 +80,7 @@ code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
   min-height: 3.2ex; min-width: 2em;
   outline: none;
 }
+textarea.inp.input-mode { --bg: #1926; }
 .btn { text-align: center; font-size: 150%; border: 2px outset #fff; }
 .btn.confirmed {
   /* border-color: var(--sel); box-shadow: 4px 4px 20px #870; */
@@ -133,6 +134,7 @@ textarea.inp { resize: both; }
 
 #thetext-line { width: 80%; }
 #thetext-area { width: 80%; height: 20ex; }
+#thetext-area.input-mode { height: 40ex; }
 #texts { white-space: nowrap; }
        #texts #thetext-line { display: inline-block; }
        #texts #thetext-area { display: none; }
@@ -153,6 +155,7 @@ textarea.inp { resize: both; }
 .qedit #thetext-done   { right: 6ex; bottom: 2.25ex; display: inline-block; }
 
 #log-container { height: 20ex; }
+#log-container.input-mode { height: 10ex; }
 #log { width: 80%; margin: auto; height: 20ex; overflow: hidden; }
 #log > div   { background: none; overflow-y: hidden;
                padding: 2px; margin: 2px;

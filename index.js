@@ -8,6 +8,17 @@ const qeditInitText = "???\n  --==--\n=> ";
 const multiAll      = "〈all〉";
 const multiNone     = "〈none〉";
 
+const inputModes = {
+  "suggest": [
+    "Write your suggested question + answers here", "",
+    "  (If you make a mistake, please indicate that this is a fix at",
+    "  the top.  I'm going over these suggestions manually, and it",
+    "  would help to avoid me guessing when you resubmit a fixed",
+    "  suggestion.)"
+  ].join("\n"),
+  "feedback": "Your feedback here."
+};
+
 const $ = x => typeof x === "string" ? document.getElementById(x) : x;
 
 const rec = f => f((...xs) => rec(f)(...xs));
@@ -79,8 +90,9 @@ const send = (txt, ok, fail, click) => {
     if (isOK) ok && ok(); else fail && fail();
   };
   const [user, pswd] = getLogin();
+  const actual = inputMode ? `{${inputMode}}\n${txt}` : txt;
   req.open("GET", `/plq?${
-    objQuery({u: user || "???", p: pswd || "???", t: txt})}`, true);
+    objQuery({u: user || "???", p: pswd || "???", t: actual})}`, true);
   req.send();
 };
 
@@ -196,7 +208,7 @@ theTextKeyListen("thetext-area", true);
 evListener("thetext-submit", "click", ()=> theTextSend());
 evListener("thetext-done",   "click", ()=> editorDone());
 $("thetext-area").addEventListener("input", e => {
-  if (editorModified) return;
+  if (editorModified || e.target.dataset.type) return;
   editorModified = true;
   send("New Question");
 });
@@ -294,8 +306,8 @@ const resetEditor = (force = false) => {
   }
 };
 
-const toggleEditor = ()=> {
-  if (!editorOn && !isSudo()) return;
+const toggleEditor = (force = false)=> {
+  if (!force && !editorOn && !isSudo()) return;
   let focus = document.activeElement == curText;
   editorOn = !editorOn;
   curText = $(editorOn ? "thetext-area" : "thetext-line");
@@ -411,6 +423,18 @@ const keyHandler = e => {
 window.addEventListener("keydown", keyHandler, true);
 window.addEventListener("keyup",   keyHandler, true);
 
+const setupInputMode = mode => {
+  toggleEditor(true);
+  curText.placeholder = inputModes[mode];
+  curText.value = "";
+  curText.dataset.type = mode;
+  curText.classList.add("input-mode");
+  $("thetext-done").style.display = "none";
+  hotKeys.clear();
+};
+
+const inputMode = Object.keys(inputModes).find(s => location.href.includes(s));
+
 window.addEventListener("load", ()=> {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register(
@@ -418,6 +442,7 @@ window.addEventListener("load", ()=> {
     .then(reg => console.log(`ServiceWorker registered for: ${reg.scope}`),
           err => console.log(`ServiceWorker failure: ${err}`));
   }
+  if (inputMode) return setupInputMode(inputMode);
   setButtons();
   setTimeout(startWS, 100);
 });
