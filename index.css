@@ -6,7 +6,7 @@ html > body {
   overflow-y: hidden;
 }
 
-code, pre, textarea { font-size:1em; font-family: monospace, monospace; }
+code, pre, textarea { font-size: 1em; font-family: monospace, monospace; }
 
 #side-menu {
   position: absolute; left: 0; top: 0;
