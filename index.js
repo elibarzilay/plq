@@ -323,26 +323,26 @@ const editorDone = ()=> {
 
 let timerRunning = null, timerDeadline = null, timerShown = null;
 const audio = $("timer-audio");
-audio.soundQueue = [];
-const playNext = ()=> {
-  if (audio.paused && audio.soundQueue.length) {
-    const next = audio.soundQueue.pop();
-    if (typeof next === "function") { next(); return playNext(); }
-    audio.src = next;
-    audio.play();
-  }
-};
-audio.addEventListener("ended", playNext);
-const stopSound = ()=> {
-  audio.pause();
-  audio.currentTime = 0;
-  audio.src = "";
-  audio.soundQueue.length = [];
-};
-const playSound = what => {
-  audio.soundQueue.unshift(what);
-  playNext();
-};
+
+const playSounds = (()=>{
+  let queue = [];
+  const playNext = ()=> {
+    if (audio.paused && queue.length) {
+      const next = queue.pop();
+      if (typeof next === "function") { next(); return playNext(); }
+      audio.src = next;
+      audio.play();
+    }
+  };
+  audio.addEventListener("ended", playNext);
+  return (...what) => {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.src = "";
+    queue = what.reverse();
+    playNext();
+  };
+})();
 
 const timerUpdate = ()=> {
   const show = Math.ceil((timerDeadline - Date.now()) / 1000);
@@ -355,13 +355,10 @@ const timerUpdate = ()=> {
   }
   audio.volume = show > 10 ? 0 : (10-show+1)/50;
   timerShown = show;
-  if (1 <= show && show <= 10) playSound("tick.mp3");
+  if (1 <= show && show <= 10) playSounds("tick.mp3");
   else if (show == 0 && audio.paused) {
-    playSound("tick.mp3");
     const big = tDiv.classList.contains("big") ? "-big" : "";
-    playSound(`alarm${big}.mp3`);
-    playSound(`over${big}.mp3`);
-    playSound(timerAdd(0));
+    playSounds("tick.mp3", `alarm${big}.mp3`, `over${big}.mp3`, timerAdd(0));
   }
   if (show >= 0) {
     tDiv.classList.remove("over");
@@ -395,7 +392,7 @@ const timerAdd = d => ()=> {
   setTimeout(()=> tDiv.style.opacity = 0.9, 100);
   if (timerRunning) { clearInterval(timerRunning); timerRunning = null; }
   if (timerDeadline > now) timerRunning = setInterval(timerUpdate, 100);
-  else { timerDeadline = null; stopSound(); quickAdjustTotal = 0; }
+  else { timerDeadline = null; playSounds(); quickAdjustTotal = 0; }
 };
 
 const hotKeys = new Map([
