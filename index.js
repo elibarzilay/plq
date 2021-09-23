@@ -87,7 +87,7 @@ const send = (txt, ok, fail, click) => {
     msg.classList.add(isOK ? "ok" : "bad");
     if (typeof reply === "string") msg.firstChild.nodeValue = reply;
     else { msg.firstChild.remove(); msg.prepend(reply); }
-    if (isOK) ok && ok(); else fail && fail();
+    if (isOK) ok && setTimeout(ok, 500); else fail && setTimeout(fail, 500);
   };
   const [user, pswd] = getLogin();
   const actual = inputMode ? `{${inputMode}}\n${txt}` : txt;
@@ -266,6 +266,7 @@ const hideMenu = ()=> menuShown && toggleMenu();
 evListener("menu-handle", "click", toggleMenu);
 evListener("menu-handle", "blur", ()=> setTimeout(hideMenu,100));
 
+evListener("login-container", "submit", e => e.preventDefault());
 const showLogin = ()=> {
   $("text-container").style.display = "none";
   $("login-container").style.display = "block";
@@ -283,13 +284,14 @@ const toggleLogin = e =>
   : setLogin();
 const keyLogin = e => {
   switch (e.key) {
-  case "Enter":  return setLogin();
+  // case "Enter":  return setLogin();
   case "Escape": if (getUser()) return hideLogin();
                  else return showError("please enter your login information");
   }
 };
 evListener("show-login", "click", toggleLogin);
 ["user", "pswd"].forEach(k => evListener(k, "keyup", keyLogin));
+evListener("login-submit", "click", setLogin);
 if (!localStorage.getItem("plq-pswd")) showLogin();
 
 let doneText = "";

@@ -33,7 +33,7 @@
              spellcheck="false"
       /><textarea id="thetext-area" class="inp" placeholder="Question"
       ></textarea><button id="thetext-done" tabindex="-1">&#x25A0;</button
-      ><button id="thetext-submit" tabindex="-1">&#x25B6;</button>
+      ><input type="submit" id="thetext-submit" value="&#x25B6;" tabindex="-1">
     </div>
   </div>
   <form id="login-container" class="container" style="display: none;">
@@ -45,6 +45,9 @@
       <input type="password" id="pswd" class="inp"
              placeholder="Password" aria-label="Password"
              autocomplete="current-password" />
+    </div><div>
+      <input type="submit" id="login-submit" value="Login"
+             class="inp" tabindex="-1">
     </div>
   </form>
 </main>
