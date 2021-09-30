@@ -91,7 +91,7 @@ const send = (txt, ok, fail, click) => {
   };
   const [user, pswd] = getLogin();
   const actual = inputMode ? `{${inputMode}}\n${txt}` : txt;
-  req.open("GET", `/plq?${
+  req.open("GET", `/sub/plq?${
     objQuery({u: user || "???", p: pswd || "???", t: actual})}`, true);
   req.send();
 };
