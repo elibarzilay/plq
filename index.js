@@ -107,6 +107,7 @@ const setButtons = (bs = lastRawButtons) => {
   const isMulti = flags.includes("+");
   const sudo = isSudo()
             && (lastButtons && lastButtons[0] == "*" ? true : "new");
+  pleeze(sudo ? "listening" : bs.length ? "on" : "off");
   const newButtons = `${isSudo ? "*" : "-"}\n${flags}\n${bs.join("\n")}`;
   if (bs && newButtons == lastButtons) return; else lastButtons = newButtons;
   const div = $("buttons");
@@ -213,6 +214,21 @@ $("thetext-area").addEventListener("input", e => {
   send("New Question");
 });
 
+const pleaseAnimation = () => {
+  const rnd = pad => `${Math.floor(Math.random() * (100 - 2*pad)) + pad}%`;
+  const a = document.createElement("div");
+  a.textContent = $("pleeze").textContent;
+  a.className = "reaction";
+  a.style.top = rnd(40); a.style.left = rnd(40);
+  document.body.append(a);
+  const move = () => {
+    a.style.top = rnd(10); a.style.left = rnd(10);
+    a.style.opacity = 0; a.style.fontSize = "300%";
+    a.addEventListener("transitionend", () => a.remove());
+  };
+  setTimeout(move, 250);
+};
+
 const startWS = (()=> {
   // The delay D between runs starts at MIN sec, and in each iteration,
   // then it goes to D*(STEPUP/T**STEPDN) for an execution that lasted T
@@ -223,15 +239,25 @@ const startWS = (()=> {
   return ()=> {
     start = Date.now();
     ws = new WebSocket("wss://plq.barzilay.org/ws");
-    ws.onmessage = e => setButtons(e.data);
-    ws.onerror = e => console.error("websocket error", e);
+    ws.onmessage = ({ data }) => {
+      console.log("message:", data);
+      if (/^{[/a-zA-Z0-9_-]+\.mp3}$/.test(data)) {
+        pleaseAnimation();
+        new Audio(data.slice(1, -1)).play();
+      } else {
+        setButtons(data);
+      }
+    };
+    ws.onerror = e => { pleeze("off"); console.error("websocket error", e); }
     ws.onclose = ()=> {
       const elapsed = (Date.now() - start) / 1000;
       const mult    = STEPUP / (STEPDN ** elapsed);
       delay         = Math.max(Math.min(delay * mult, MAX), MIN);
       console.log(`websocket closed, restarting in ${Math.round(delay)}s`);
       setTimeout(startWS, 1000 * delay);
+      pleeze("off");
     };
+    pleeze("ws", ws);
   };
 })();
 
@@ -293,6 +319,28 @@ evListener("show-login", "click", toggleLogin);
 ["user", "pswd"].forEach(k => evListener(k, "keyup", keyLogin));
 evListener("login-submit", "click", setLogin);
 if (!localStorage.getItem("plq-pswd")) showLogin();
+
+const pleeze = (()=> {
+  const m = $("right-menu"), b = $("pleeze"), onOff = ["on", "off"];
+  let ws = null, on = false;
+  const handle = (msg, more) => {
+    if (msg === "ws") {
+      ws = more;
+    } else if (onOff.includes(msg)) {
+      m.style.display = (on = msg === "on") ? "block" : "none";
+    } else if (msg === "listening") {
+      ws?.send(JSON.stringify({
+        msg: "listening",
+        user: getLogin().map(x => x ?? "?").join(":"),
+      }));
+    }
+  };
+  evListener(b, "click", () => ws && on && ws.send(JSON.stringify({
+    msg: "pleeze",
+    user: getLogin().map(x => x ?? "?").join(":"),
+  })));
+  return handle;
+})();
 
 let doneText = "";
 const resetEditor = (force = false) => {

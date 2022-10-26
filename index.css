@@ -12,14 +12,14 @@ code, pre, textarea { font-size: 1em; font-family: monospace, monospace; }
   position: absolute; left: 0; top: 0;
   opacity: 0.975; display: flex; flex-direction: column;
 }
-#menu-handle, #side-links {
+#menu-handle, #side-links, #right-menu {
   color: #ccc; background: #2d1d3d; border: 0;
 }
 #menu-handle {
   font-size: 75%; cursor: pointer; opacity: 0.75; border-radius: 1ex 1ex 0 0;
   margin-right: auto;
 }
-#menu-handle > * {
+#menu-handle > *, #right-menu button {
   background: none; border: 0; color: #ccc; padding: 1ex; outline: none;
 }
 #side-links {
@@ -39,12 +39,24 @@ code, pre, textarea { font-size: 1em; font-family: monospace, monospace; }
   margin: 1ex 0;
 }
 #side-links > #install { display: none; }
-#menu-handle:hover,  #side-links > a:hover  { background: #452e5c; }
-#menu-handle:active, #side-links > a:active { background: #573a74; }
+#menu-handle:hover,  #side-links > a:hover,  #right-menu:hover  { background: #452e5c; }
+#menu-handle:active, #side-links > a:active, #right-menu:active { background: #573a74; }
 
 .login-image { height: 2ex; vertical-align: middle; }
 #menu-handle > .login-image { height: 4ex; }
 .qedit #menu-handle > .login-image { height: 8ex; }
+
+#right-menu {
+  display: none; position: absolute; top: 10px; right: 10px;
+  opacity: 0.5; border-radius: 8px;
+}
+#right-menu:hover { opacity: 0.75; }
+
+div.reaction {
+  position: fixed; pointer-events: none; z-index: 999;
+  background-color: #0000; border: none; opacity: 1; font-size: 0%;
+  transition: all 1s cubic-bezier(0.4, 0.15, 0.8, 0.3);
+}
 
 .container {
   max-width: 1080px;
