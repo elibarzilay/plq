@@ -229,6 +229,8 @@ const pleaseAnimation = () => {
   setTimeout(move, 250);
 };
 
+let enablePleeze = false;
+
 const startWS = (()=> {
   // The delay D between runs starts at MIN sec, and in each iteration,
   // then it goes to D*(STEPUP/T**STEPDN) for an execution that lasted T
@@ -242,8 +244,8 @@ const startWS = (()=> {
     ws.onmessage = ({ data }) => {
       console.log("message:", data);
       if (/^{[/a-zA-Z0-9_-]+\.mp3}$/.test(data)) {
-        pleaseAnimation();
-        new Audio(data.slice(1, -1)).play();
+        pleaseAnimation(); // always allow the animation, for now
+        if (enablePleeze) new Audio(data.slice(1, -1)).play();
       } else {
         setButtons(data);
       }
@@ -396,7 +398,7 @@ const playSounds = (()=>{
 
 const timerUpdate = ()=> {
   const show = Math.ceil((timerDeadline - Date.now()) / 1000);
-  if (timerShown == show) return;
+  if (timerShown === show) return;
   const pad2 = n => n < 10 ? "0"+n : n;
   const tDiv = $("timer");
   const setText = txt => {
@@ -405,10 +407,12 @@ const timerUpdate = ()=> {
   }
   audio.volume = show > 10 ? 0 : (10-show+1)/50;
   timerShown = show;
+  enablePleeze = show <= 10;
   if (1 <= show && show <= 10) playSounds("tick.mp3");
   else if (show == 0 && audio.paused) {
     const big = tDiv.classList.contains("big") ? "-big" : "";
-    playSounds("tick.mp3", `alarm${big}.mp3`, `over${big}.mp3`, timerAdd(0));
+    playSounds("tick.mp3", `alarm${big}.mp3`, `over${big}.mp3`,
+               timerAdd(0));
   }
   if (show >= 0) {
     tDiv.classList.remove("over");
@@ -432,17 +436,25 @@ const timerAdd = d => ()=> {
     quickAdjustTotal = Infinity;
     timerDeadline += 10000 * d;
   }
-  if (!!timerRunning === (timerDeadline > now)) return;
+  const showTime = timerDeadline > now;
+  if (!!timerRunning === showTime) return;
   const tDiv = $("timer");
-  tDiv.classList.toggle("active", timerDeadline > now);
+  tDiv.classList.toggle("active", showTime);
   tDiv.classList.remove("over");
   tDiv.style.opacity = 0;
   tDiv.style.width = "";
   timerUpdate();
   setTimeout(()=> tDiv.style.opacity = 0.9, 100);
-  if (timerRunning) { clearInterval(timerRunning); timerRunning = null; }
-  if (timerDeadline > now) timerRunning = setInterval(timerUpdate, 100);
-  else { timerDeadline = null; playSounds(); quickAdjustTotal = 0; }
+  if (showTime) {
+    return timerRunning = setInterval(timerUpdate, 100);
+  } else {
+    clearInterval(timerRunning);
+    timerRunning = null;
+    timerDeadline = null;
+    enablePleeze = false;
+    playSounds();
+    quickAdjustTotal = 0;
+  }
 };
 
 const hotKeys = new Map([
