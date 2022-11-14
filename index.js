@@ -250,7 +250,7 @@ const startWS = (()=> {
         setButtons(data);
       }
     };
-    ws.onerror = e => { pleeze("off"); console.error("websocket error", e); }
+    ws.onerror = e => { pleeze("off"); /* console.error("websocket error", e); */ }
     ws.onclose = ()=> {
       const elapsed = (Date.now() - start) / 1000;
       const mult    = STEPUP / (STEPDN ** elapsed);
@@ -344,6 +344,20 @@ const pleeze = (()=> {
   return handle;
 })();
 
+let lastQuietPlease = 0;
+const QuietPleases = [
+  "please/QuietPleaseMale.mp3",
+  "please/QuietPleaseFemale.mp3"
+];
+const quietPlease = () => {
+  const now = Date.now();
+  const last = lastQuietPlease;
+  lastQuietPlease = now;
+  if (now - last < 2 * 60 * 1000) return; // don't nag if the time is bumped
+  const qp = QuietPleases[Math.floor(Math.random() * QuietPleases.length)];
+  new Audio(qp).play();
+};
+
 let doneText = "";
 const resetEditor = (force = false) => {
   if (!editorOn) return;
@@ -405,9 +419,10 @@ const timerUpdate = ()=> {
     tDiv.innerHTML = `<div>${txt}</div>`;
     tDiv.style.width = tDiv.children[0].getBoundingClientRect().width + "px";
   }
-  audio.volume = show > 10 ? 0 : (10-show+1)/50;
   timerShown = show;
   enablePleeze = show <= 10;
+  if (show === 20) quietPlease();
+  audio.volume = show > 10 ? 0 : (10-show)**2/500; // !!! make the ticks part more quiet
   if (1 <= show && show <= 10) playSounds("tick.mp3");
   else if (show == 0 && audio.paused) {
     const big = tDiv.classList.contains("big") ? "-big" : "";

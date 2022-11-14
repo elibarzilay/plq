@@ -67,7 +67,7 @@ div.reaction {
 
 #buttons {
   /* text-indent: 3em; to avoid side-menu handle */
-  margin-top: 1ex;
+  margin-top: 3ex;
   overflow-y: hidden;
   transition: height 0.4s;
   display: flex;
