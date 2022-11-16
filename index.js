@@ -229,7 +229,7 @@ const pleaseAnimation = () => {
   setTimeout(move, 250);
 };
 
-let enablePleeze = false;
+let enablePleeze = 0; // 1 = only emoji, 2 = also sound
 
 const startWS = (()=> {
   // The delay D between runs starts at MIN sec, and in each iteration,
@@ -244,8 +244,8 @@ const startWS = (()=> {
     ws.onmessage = ({ data }) => {
       console.log("message:", data);
       if (/^{[/a-zA-Z0-9_-]+\.mp3}$/.test(data)) {
-        pleaseAnimation(); // always allow the animation, for now
-        if (enablePleeze) new Audio(data.slice(1, -1)).play();
+        if (enablePleeze >= 1) pleaseAnimation();
+        if (enablePleeze >= 2) new Audio(data.slice(1, -1)).play();
       } else {
         setButtons(data);
       }
@@ -420,9 +420,9 @@ const timerUpdate = ()=> {
     tDiv.style.width = tDiv.children[0].getBoundingClientRect().width + "px";
   }
   timerShown = show;
-  enablePleeze = show <= 10;
+  enablePleeze = show <= 10 ? 2 : show <= 20 ? 1 : 0;
   if (show === 20) quietPlease();
-  audio.volume = show > 10 ? 0 : (10-show)**2/500; // !!! make the ticks part more quiet
+  audio.volume = show > 10 ? 0 : Math.min((10-show)**2/500, 1);
   if (1 <= show && show <= 10) playSounds("tick.mp3");
   else if (show == 0 && audio.paused) {
     const big = tDiv.classList.contains("big") ? "-big" : "";
@@ -466,7 +466,7 @@ const timerAdd = d => ()=> {
     clearInterval(timerRunning);
     timerRunning = null;
     timerDeadline = null;
-    enablePleeze = false;
+    enablePleeze = 0;
     playSounds();
     quickAdjustTotal = 0;
   }
