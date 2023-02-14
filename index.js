@@ -89,10 +89,10 @@ const send = (txt, ok, fail, click) => {
     else { msg.firstChild.remove(); msg.prepend(reply); }
     if (isOK) ok && setTimeout(ok, 500); else fail && setTimeout(fail, 500);
   };
-  const [user, pswd] = getLogin();
+  const { username, password } = getLogin();
   const actual = inputMode ? `{${inputMode}}\n${txt}` : txt;
   req.open("GET", `/sub/plq?${
-    objQuery({u: user || "???", p: pswd || "???", t: actual})}`, true);
+    objQuery({u: username || "???", p: password || "???", t: actual})}`, true);
   req.send();
 };
 
@@ -103,7 +103,10 @@ const setButtons = (bs = lastRawButtons) => {
   { const m = bs.match(/^〈〈(.*)〉〉\n([\s\S]*)$/);
     if (m) { flags = m[1]; bs = m[2]; }
   }
-  bs = bs.split("\n").map(s => s.trim()).filter(s => s.length);
+  const isFeedback = bs === "-FEEDBACK-";
+  bs = isFeedback
+    ? feedbackButtons
+    : bs.split("\n").map(s => s.trim()).filter(s => s.length);
   const isMulti = flags.includes("+");
   const sudo = isSudo()
             && (lastButtons && lastButtons[0] == "*" ? true : "new");
@@ -122,22 +125,23 @@ const setButtons = (bs = lastRawButtons) => {
     return btns.filter(b => b.classList.contains("selected"))
                .map(b => b.innerText).join("; ") || multiNone;
   };
-  const mkElement = (tag, cssClass, txt, isOp) => {
+  const mkElement = (tag, classes, txt = null, isOp = false) => {
     const b = document.createElement(tag);
-    b.classList.add(cssClass);
-    if (isOp) b.classList.add("op");
+    (typeof classes === "string" ? [classes] : classes)
+      .forEach(c => c && b.classList.add(c));
     if (txt) b.innerText = txt;
     div.appendChild(b);
     if (txt)
       evListener(b, "click",
-                 isOp ? rec(me => ()=> send(opWrap(txt), null, null, me))
+                 isFeedback ? sendFeedback
+                 : isOp ? rec(me => ()=> send(opWrap(txt), null, null, me))
                  : ()=> send(txt = clickText(b), ()=> setBtnStatus(txt), null,
                              reuseText(txt, false)));
     return b;
   };
   const mkBr    =   ()=> mkElement("div", "break");
-  const mkBtn   = txt => mkElement("button", "btn", txt);
-  const mkOpBtn = txt => mkElement("button", "btn", txt, true);
+  const mkBtn   = txt => mkElement("button", ["btn", isFeedback && "fdbk"], txt);
+  const mkOpBtn = txt => mkElement("button", ["btn", "op"], txt, true);
   const equalWidths = bs => {
     const max = bs.map(b => b.getBoundingClientRect().width)
                   .reduce((x,y) => Math.max(x,y), 0);
@@ -147,7 +151,8 @@ const setButtons = (bs = lastRawButtons) => {
   const createElts = ()=> {
     while (div.firstChild) div.firstChild.remove();
     if (sudo) { equalWidths(opButtons.map(mkOpBtn)); mkBr(); }
-    btns = equalWidths(bs.map(mkBtn));
+    btns = bs.map(mkBtn);
+    if (!isFeedback) btns = equalWidths(btns);
     if (isMulti) { mkBr(); equalWidths([multiAll, multiNone].map(mkBtn)); }
     if (sudo == "new")
       [...buttons.querySelectorAll(".btn.op")]
@@ -214,6 +219,12 @@ $("thetext-area").addEventListener("input", e => {
   send("New Question");
 });
 
+const feedbackButtons = [ "🙂", "  FOCUS! 🙁  " ];
+const sendFeedback = ({ target }) =>
+  ws && ws.send(JSON.stringify({
+    msg: "feedback", n: feedbackButtons.indexOf(target.innerText),
+    ...getLogin() }));
+
 const pleaseAnimation = () => {
   const rnd = pad => `${Math.floor(Math.random() * (100 - 2*pad)) + pad}%`;
   const a = document.createElement("div");
@@ -231,18 +242,20 @@ const pleaseAnimation = () => {
 
 let enablePleeze = 0; // 1 = only emoji, 2 = also sound
 
+let ws = null;
 const startWS = (()=> {
   // The delay D between runs starts at MIN sec, and in each iteration,
   // then it goes to D*(STEPUP/T**STEPDN) for an execution that lasted T
   // secs, kept within the MIN..MAX bounds.
   const MIN = 1, MAX = 60, STEPUP = 1.5,
         STEPDN = STEPUP ** (1/30); // T = 30s => no change in delay
-  let ws, start, delay = MIN;
+  let start, delay = MIN;
   return ()=> {
     start = Date.now();
     ws = new WebSocket("wss://plq.barzilay.org/ws");
+    ws.onopen = () => ws.send(JSON.stringify("web"));
     ws.onmessage = ({ data }) => {
-      console.log("message:", data);
+      // console.log("message:", data);
       if (/^{[/a-zA-Z0-9_-]+\.mp3}$/.test(data)) {
         if (enablePleeze >= 1) pleaseAnimation();
         if (enablePleeze >= 2) new Audio(data.slice(1, -1)).play();
@@ -258,14 +271,17 @@ const startWS = (()=> {
       console.log(`websocket closed, restarting in ${Math.round(delay)}s`);
       setTimeout(startWS, 1000 * delay);
       pleeze("off");
+      ws = null;
     };
-    pleeze("ws", ws);
+    pleeze("ws-open");
   };
 })();
 
 const getLogin = ()=>
-  ["plq-user", "plq-pswd"].map(i => localStorage.getItem(i));
-const getUser = ()=> getLogin()[0];
+  ({ username: localStorage.getItem("plq-user"),
+     password: localStorage.getItem("plq-pswd")
+   });
+const getUser = ()=> localStorage.getItem("plq-user");
 const setLogin = ()=> {
   const user = $("user").value.trim().toLowerCase(),
         pswd = $("pswd").value;
@@ -324,23 +340,19 @@ if (!localStorage.getItem("plq-pswd")) showLogin();
 
 const pleeze = (()=> {
   const m = $("right-menu"), b = $("pleeze"), onOff = ["on", "off"];
-  let ws = null, on = false;
+  let on = false, listeningSent = false;
   const handle = (msg, more) => {
-    if (msg === "ws") {
-      ws = more;
+    if (msg === "ws-open") {
+      listeningSent = false;
     } else if (onOff.includes(msg)) {
       m.style.display = (on = msg === "on") ? "block" : "none";
-    } else if (msg === "listening") {
-      ws?.send(JSON.stringify({
-        msg: "listening",
-        user: getLogin().map(x => x ?? "?").join(":"),
-      }));
+    } else if (ws && !listeningSent && msg === "listening") {
+      ws.send(JSON.stringify({ msg: "listening", ...getLogin() }));
+      listeningSent = true;
     }
   };
-  evListener(b, "click", () => ws && on && ws.send(JSON.stringify({
-    msg: "pleeze",
-    user: getLogin().map(x => x ?? "?").join(":"),
-  })));
+  evListener(b, "click", () =>
+    ws && on && ws.send(JSON.stringify({ msg: "pleeze", ...getLogin() })));
   return handle;
 })();
 
@@ -477,7 +489,8 @@ const hotKeys = new Map([
   ["l",         ["keyup",   toggleLogin]],
   ["s",         ["keyup",   toggleEditor]],
   ["d",         ["keyup",   editorDone]],
-  ["ArrowUp",   ["keydown", timerAdd(+1)]],
+  ["f",         ["keyup",   ()=> isSudo() && send(opWrap("Feedback"))]],
+  ["ArrowUp",   ["keydown", timerAdd(1)]],
   ["ArrowDown", ["keydown", timerAdd(-1)]],
   ["PageUp",    ["keydown", timerAdd(+2)]],
   ["PageDown",  ["keydown", timerAdd(-2)]],

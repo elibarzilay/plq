@@ -41,6 +41,7 @@ code, pre, textarea { font-size: 1em; font-family: monospace, monospace; }
 #side-links > #install { display: none; }
 #menu-handle:hover,  #side-links > a:hover,  #right-menu:hover  { background: #452e5c; }
 #menu-handle:active, #side-links > a:active, #right-menu:active { background: #573a74; }
+#side-links > hr { border-color: #fff4; margin: -0.25ex 0; }
 
 .login-image { height: 2ex; vertical-align: middle; }
 #menu-handle > .login-image { height: 4ex; }
@@ -119,15 +120,17 @@ textarea.inp.input-mode { --bg: #1926; }
   .btn { min-width: 30vw; }
 } */
 .inp::placeholder {
-  font-style: italic; text-shadow: none; color: #888;
-  transform: scale(0.5); transform-origin: 0% 50%;
+  font-style: italic; text-shadow: none; color: #888; font-size: 50%;
 }
 .qedit .btn, .qedit .inp {
   color: #ff0; --bg: #1358;
 }
 .btn.op {
-  background: #a848; border-color: #af0; box-shadow: 4px 4px 20px #580;
+  background: #a428; border-color: #af0; box-shadow: 4px 4px 20px #580;
   font-size: 75%;
+}
+.btn.fdbk {
+  font-size: 200%; font-weight: 900; margin: 2em 0.2ex; background: #13a8;
 }
 .btn:hover, .inp:hover { filter: brightness(100%); }
 .btn:focus, .inp:focus { filter: brightness(100%); }
