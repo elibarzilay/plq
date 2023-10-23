@@ -187,30 +187,34 @@ const reuseText = (txt, editor = editorOn) => ()=> {
   if (editorOn != editor) toggleEditor();
   curText.value = txt; curText.focus();
 };
-const theTextSend = (clear = !editorOn) => {
+const theTextSend = () => {
   const txt = curText.value.trim();
-  const onOK = ()=> { setBtnStatus(txt); if (clear) curText.value = ""; };
+  const onOK = ()=> { setBtnStatus(txt); if (!editorOn) curText.value = ""; };
   setBtnStatus(txt, "selected");
   send(txt, onOK, null, reuseText(txt));
   curText.focus();
 };
-const theTextKeyListen = (id, editor) =>
-  evListener(id, "keyup", e => {
-    switch (e.key) {
-    case "Enter":
-      if (editor && !(e.ctrlKey || e.altKey)) return;
-      e.preventDefault(); e.stopImmediatePropagation();
-      theTextSend(!editor);
-      return;
-    case "Escape":
-      if (editor) return;
-      e.target.setSelectionRange(0, e.target.value.length);
-      document.execCommand("insertText", false, "");
-      return;
-    }
-  });
-theTextKeyListen("thetext-line", false);
-theTextKeyListen("thetext-area", true);
+window.addEventListener("keyup", e => {
+  switch (e.key) {
+  case "Escape":
+    if (!mdShown()) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    mdClose();
+    return;
+  case "Enter":
+    if (editorOn && !(e.ctrlKey || e.altKey)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (e.ctrlKey) theTextSend();
+    if (editorOn && e.altKey) mdToggle();
+    return;
+  case "Escape":
+    if (editorOn) return;
+    e.target.setSelectionRange(0, e.target.value.length);
+    document.execCommand("insertText", false, "");
+    return;
+  }
+});
+
 evListener("thetext-submit", "click", ()=> theTextSend());
 evListener("thetext-done",   "click", ()=> editorDone());
 $("thetext-area").addEventListener("input", e => {
@@ -395,6 +399,7 @@ const toggleEditor = (force = false)=> {
 };
 
 const editorDone = ()=> {
+  mdClose();
   if (!editorOn) return;
   send(opWrap("Done"), ()=> resetEditor(true));
 };
@@ -549,3 +554,43 @@ evListener("install", "click", ()=> setTimeout(()=> {
     installEvt = null;
   });
 }, 250));
+
+// ----------------------------------------------------------------------------
+
+let cmarkScript = null, cmark = null;
+const loadCMark = c => {
+  if (cmarkScript && cmark) return c();
+  if (cmarkScript) return; // still loading: ignore
+  cmarkScript = Object.assign(document.createElement("script"), {
+    src: "https://cdnjs.cloudflare.com/ajax/libs/commonmark/0.29.3/commonmark.min.js",
+    integrity: "sha512-Mq6HFo4kQ6yog5IKk+MflA4KRIB966kfsdk9NpuM1dUOZOcuGEJMVMXeFzTNIXvrzCIOt7t/rmBZOsgkR7IY7w==",
+    crossOrigin: "anonymous", referrerPolicy: "no-referrer",
+  });
+  cmarkScript.addEventListener("load", ()=> {
+    const Parser = new commonmark.Parser({smart: true}), parse  = Parser.parse.bind(Parser),
+          Renderer = new commonmark.HtmlRenderer(),      render = Renderer.render.bind(Renderer);
+    cmark = Object.assign(commonmark, { parse, render });
+    return c();
+  });
+  document.head.append(cmarkScript);
+};
+
+const rendered = $("thetext-rendered");
+const mdShown = () => rendered.classList.contains("active");
+const mdRender = () => loadCMark(() => {
+  rendered.classList.add("active");
+  let text = curText.value;
+  text = text.replace(/^ *(\+)?-+(=+|:+)-+ *$/gm, (_, multi, __) =>
+    `\n<div class="sep">${multi ? "multiple choice" : ""}</div>\n`);
+  text = cmark.parse(text);
+  text = cmark.render(text);
+  text = text.replace(/<li>(\s*(?:<p>)?\s*)\[([^\[\]]+)\] */g, (_, pfx, lbl) =>
+      `<li class="labeled" data-label="${lbl}"><label><div>${
+        lbl}</div></label>${pfx}`),
+  rendered.innerHTML = text;
+});
+const mdClose = () => {
+  curText.focus();
+  rendered.classList.remove("active");
+}
+const mdToggle = () => mdShown() ? mdClose() : mdRender();

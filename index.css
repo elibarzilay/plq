@@ -60,7 +60,7 @@ div.reaction {
 }
 
 .container {
-  max-width: 1080px;
+  /* max-width: 1080px; */
   margin: 5px auto;
   text-align: center;
   align-self: center;
@@ -112,9 +112,10 @@ textarea.inp.input-mode { --bg: #1926; }
               var(--bg);
 }
 @media only screen and (min-width: 769px) {
-  .inp, .btn, #thetext-submit, #thetext-done { font-size: 150%; }
-  #thetext-submit, #thetext-done { vertical-align: unset !important; }
+  .inp, .btn, #thetext-submit, #thetext-done { font-size: 125%; }
+  textarea.inp { font-size: 100%; }
 }
+textarea.inp { font-size: 80%; }
 /* @media only screen and (max-width: 768px) {
   #buttons { flex-direction: row; }
   .btn { min-width: 30vw; }
@@ -144,26 +145,94 @@ textarea.inp { resize: both; }
   text-align: center; transform-origin: 50% 50%;
 }
 
-#thetext-line { width: 80%; }
-#thetext-area { width: 80%; height: 20ex; }
+#thetext-line { margin: 0; width: 20em; }
+#thetext-area { margin: 0; width: 40em; height: 20ex; }
 #thetext-area.input-mode { height: 40ex; }
-#texts { white-space: nowrap; }
+#texts {
+  position: relative; width: fit-content; margin: auto; white-space: nowrap;
+}
        #texts #thetext-line { display: inline-block; }
        #texts #thetext-area { display: none; }
 .qedit #texts #thetext-line { display: none; }
-.qedit #texts #thetext-area { display: inline-block; }
+.qedit #texts #thetext-area { display: block; }
+
+#thetext-buttons {
+  position: absolute; right: 1ex; bottom: 1ex;
+}
 
 #thetext-submit, #thetext-done {
   color: #888; background: none; border: 0; filter: brightness(100%);
-  cursor: pointer; display: inline-block;
-  position: relative; right: 3ex; bottom: 0; padding: 0; margin: 0;
-  margin-inline-start: 0; margin-inline-end: 0; margin-left: -1ex;
-  transform: scale(2); vertical-align: middle;
+  cursor: pointer; padding: 0; margin: 0; outline: none;
 }
-#thetext-submit:focus, #thetext-done:focus { outline: none; }
-.qedit #thetext-submit { right: 3ex; bottom: 1.75ex; }
-       #thetext-done   { display: none; }
-.qedit #thetext-done   { right: 6ex; bottom: 2.25ex; display: inline-block; }
+#thetext-done { display: none; }
+.qedit #thetext-done { display: inline-block; }
+
+#thetext-rendered {
+  position: absolute; width: 100%; height: 100%; left: 0; top: 0;
+  background: #135; text-align: left; padding: 1ex; box-sizing: border-box;
+  transition: all 1s; opacity: 0; pointer-events: none; text-wrap: wrap;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+}
+#thetext-rendered.active {
+  opacity: 1; pointer-events: auto;
+}
+
+#thetext-rendered p { margin-block: 1ex; }
+#thetext-rendered hr { margin-block: 1em; }
+
+#thetext-rendered pre, #thetext-rendered :not(pre) > code, #thetext-rendered kbd {
+  font-size: 1em; font-family: Consolas, monospace, monospace;
+  color: #bf8; background: #8228;
+}
+#thetext-rendered code, #thetext-rendered kbd {
+  padding: 0 0.25ex; border-radius: 0.5ex;
+}
+#thetext-rendered kbd { border: #666 solid 1px; }
+#thetext-rendered pre {
+  width: fit-content; font-size: 80%; padding: 0.5ex;
+  border: #111 solid 2px; border-radius: 1ex 0 0 0;
+}
+#thetext-rendered pre { margin: 5px 0; }
+#thetext-rendered blockquote {
+  font-size: 80%; font-style: italic; background: #4448;
+  margin-left: 2em; padding: 0.5ex 0;
+  border-left: 4px solid #333; border-radius: 0.5ex;
+}
+
+#thetext-rendered .sep {
+  width: 100%; display: flex; align-items: center; text-align: center;
+  margin: 1em 0; color: #777;
+}
+#thetext-rendered .sep::before, #thetext-rendered .sep::after {
+  flex: 1; content: ''; border-bottom: 2px solid #777;
+}
+#thetext-rendered .sep:not(:empty)::before { margin-right: 1ex; }
+#thetext-rendered .sep:not(:empty)::after  { margin-left:  1ex; }
+
+#thetext-rendered ul { padding-inline-start: 3ex; }
+#thetext-rendered ul li { margin-top: 1ex; }
+#thetext-rendered ul li > p { margin: 1ex auto; }
+#thetext-rendered ul li.labeled::marker { content: ""; }
+#thetext-rendered ul li.labeled { padding: 0 0.5ex; border-radius: 0.5ex; }
+#thetext-rendered ul li.labeled label {
+  display: block;
+  width: 0;
+  direction: rtl;
+  margin-left: -0.3em;
+  float: left;
+}
+#thetext-rendered ul li.labeled label > div {
+  direction: ltr;
+  width: fit-content;
+  line-height: 75%;
+  padding: 0.2em;
+  border-radius: 0.5ex;
+  border: 0.5px solid #84c5;
+  background: #84c5;
+  font-family: consolas, inconsolata, monospace;
+  font-weight: bold;
+  white-space: nowrap;
+}
 
 #log-container { height: 20ex; }
 #log-container.input-mode { height: 10ex; }
