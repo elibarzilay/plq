@@ -6,6 +6,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#235">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="darkreader-lock">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon256.png" />
   <link rel="shortcut icon" href="icon256.png" />
@@ -36,7 +37,8 @@
              placeholder="Answer" aria-label="Answer"
              autocomplete="off" autocorrect="off" autocapitalize="off"
              spellcheck="false" />
-      <textarea id="thetext-area" class="inp" placeholder="Question"></textarea>
+      <textarea id="thetext-area" class="inp" placeholder="Question"
+                spellcheck="false"></textarea>
       <div id="thetext-rendered"></div>
       <div id="thetext-buttons">
         <button id="thetext-done" tabindex="-1">&#x2BC0;</button>
