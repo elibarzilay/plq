@@ -202,6 +202,7 @@ window.addEventListener("keyup", e => {
     mdClose();
     return;
   case "Enter":
+    if (!editorOn) { theTextSend(); return; }
     if (editorOn && !(e.ctrlKey || e.altKey)) return;
     e.preventDefault(); e.stopImmediatePropagation();
     if (e.ctrlKey) theTextSend();
