@@ -589,6 +589,12 @@ const mdRender = () => loadCMark(() => {
       `<li class="labeled" data-label="${lbl}"><label><div>${
         lbl}</div></label>${pfx}`),
   rendered.innerHTML = text;
+  // adjust indentation to accomodate labels
+  setTimeout(()=> {
+    const w = Math.max(...[...rendered.querySelectorAll("ul li label div")]
+                       .map(l => l.offsetWidth));
+    rendered.style.setProperty("--li-indent", w + "px");
+  }, 10);
 });
 const mdClose = () => {
   curText.focus();

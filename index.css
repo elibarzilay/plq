@@ -101,12 +101,12 @@ textarea.inp.input-mode { --bg: #1926; }
                               var(--sel) 3px, #0000 4px),
               var(--bg);
 }
-.btn.selected  {
+.btn.selected {
   background: radial-gradient(circle at 0.5ex 0.5ex,
                               #0000 2px, var(--sel) 4px, #0000 5px),
               var(--bg);
 }
-.btn.selected.confirmed  {
+.btn.selected.confirmed {
   background: radial-gradient(circle at 0.5ex 0.5ex,
                               var(--sel) 4px, #0000 5px),
               var(--bg);
@@ -127,8 +127,8 @@ textarea.inp { font-size: 80%; }
   color: #ff0; --bg: #1358;
 }
 .btn.op {
-  background: #a428; border-color: #af0; box-shadow: 4px 4px 20px #580;
-  font-size: 75%;
+  background: #8428; border-color: #af08; box-shadow: 4px 4px 20px #5808;
+  font-size: 50%;
 }
 .btn.fdbk {
   font-size: 200%; font-weight: 900; margin: 2em 0.2ex; background: #13a8;
@@ -209,7 +209,8 @@ textarea.inp { resize: both; }
 #thetext-rendered .sep:not(:empty)::before { margin-right: 1ex; }
 #thetext-rendered .sep:not(:empty)::after  { margin-left:  1ex; }
 
-#thetext-rendered ul { padding-inline-start: 3ex; }
+#thetext-rendered { --li-indent: 3ex; }
+#thetext-rendered ul { padding-inline-start: var(--li-indent); }
 #thetext-rendered ul li { margin-top: 1ex; }
 #thetext-rendered ul li > p { margin: 1ex auto; }
 #thetext-rendered ul li.labeled::marker { content: ""; }
