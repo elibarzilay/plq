@@ -235,6 +235,14 @@ textarea.inp { resize: both; }
   white-space: nowrap;
 }
 
+#thetext-rendered .oneLineItem {
+  color: #FF8;
+  background: #8883;
+  padding-inline: 3px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 #log-container { height: 20ex; }
 #log-container.input-mode { height: 10ex; }
 #log { width: 80%; margin: auto; height: 20ex; overflow: hidden; }

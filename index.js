@@ -581,8 +581,22 @@ const mdShown = () => rendered.classList.contains("active");
 const mdRender = () => loadCMark(() => {
   rendered.classList.add("active");
   let text = curText.value;
-  text = text.replace(/^ *(\+)?-+(=+|:+)-+ *$/gm, (_, multi, __) =>
-    `\n<div class="sep">${multi ? "multiple choice" : ""}</div>\n`);
+  const sep = multi =>
+    `\n\n<div class="sep">${multi ? "multiple choice" : ""}</div>\n\n`
+  text = text.replace(/([^]*\n) *(\+)?-+(?:=+|:+)-+ *\n/, (_, qtxt, multi) =>
+    `${qtxt}${sep(multi)}`);
+  if (text === curText.value) { // handle a "=> ...options..." line
+    const open = `<span class="oneLineItem">`, close = `</span>`;
+    const rngRx =
+      RegExp(`^(?:${["\\d+", "[a-z]", "[A-Z]"]
+                    .map(c => `(?<B>${c})(?<M>\\.{2,3}|-{1,3}|–|—)(?<E>${c})`)
+                    .join("|")})$`);
+    const label = str => str.replace(rngRx, `$<B>${close}$<M>${open}$<E>`);
+    const item  = i => `➥&nbsp;${open}${label(i)}${close}`;
+    const items = line => line.split(/ *, */).map(item).join("&nbsp; ");
+    const line  = (_, qtxt, multi, line) => `${qtxt}${sep(multi)}${items(line)}`;
+    text = text.replace(/([^]*\n) *(\++)?(?:=+|:+=*)>+ +([^\n]+)\n*$/, line);
+  }
   text = cmark.parse(text);
   text = cmark.render(text);
   text = text.replace(/<li>(\s*(?:<p>)?\s*)\[([^\[\]]+)\] */g, (_, pfx, lbl) =>
